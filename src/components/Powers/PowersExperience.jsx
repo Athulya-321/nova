@@ -37,13 +37,13 @@ export default function PowersExperience() {
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 60, background: '#000', overflow: 'hidden' }}>
       
-      {/* High Definition Clean Background Image */}
+      {/* High Definition Celestial Temple Background Image */}
       <motion.div
-        animate={{ filter: powerActive ? 'brightness(0.3) contrast(1.2)' : 'brightness(1) contrast(1)' }}
+        animate={{ filter: powerActive ? 'brightness(0.35) contrast(1.2)' : 'brightness(1) contrast(1.05)' }}
         transition={{ duration: 1 }}
         style={{ 
           position: 'absolute', width: '100%', height: '100%',
-          backgroundImage: 'url(/powers.png)',
+          backgroundImage: 'url(/nova_powers_temple.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
