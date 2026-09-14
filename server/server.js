@@ -31,6 +31,20 @@ app.post('/api/chat', async (req, res) => {
 
     const session = sessions.get(conversationId);
     
+    // Always merge latest visitorProfile from frontend into session profile
+    if (visitorProfile && typeof visitorProfile === 'object') {
+      Object.entries(visitorProfile).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && String(v).trim() !== '') {
+          session.profile[k] = v;
+        }
+      });
+    }
+
+    // Always keep history in sync if frontend sent more recent history
+    if (Array.isArray(conversationHistory) && conversationHistory.length > 0) {
+      session.history = [...conversationHistory];
+    }
+    
     // Add user message to history
     session.history.push({ role: 'user', text: message });
 

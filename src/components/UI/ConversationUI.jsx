@@ -8,7 +8,7 @@ import '../../styles/ui.css';
 export default function ConversationUI() {
   const { 
     conversationPhase, advanceConversation, 
-    visitorData, updateVisitorData,
+    visitorData, setVisitorData, updateVisitorData,
     visitorMood, setVisitorMood,
     chatHistory, setChatHistory,
     conversationId, setConversationId
@@ -95,12 +95,16 @@ export default function ConversationUI() {
       
       // Update Context Profile immediately (e.g. name globally, location, age, email, problem)
       if (data.profileUpdates) {
-        Object.entries(data.profileUpdates).forEach(([key, value]) => {
-          if (value && String(value).trim() !== '') {
-            updateVisitorData(key, value);
-            if (key === 'grievance') updateVisitorData('problem', value);
-            if (key === 'problem') updateVisitorData('grievance', value);
-          }
+        setVisitorData(prev => {
+          const updated = { ...prev };
+          Object.entries(data.profileUpdates).forEach(([k, v]) => {
+            if (v && String(v).trim() !== '') {
+              updated[k] = v;
+              if (k === 'grievance') updated.problem = v;
+              if (k === 'problem') updated.grievance = v;
+            }
+          });
+          return updated;
         });
       }
 

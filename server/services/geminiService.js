@@ -219,7 +219,22 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
   let reply = "";
   let intent = "general";
 
-  // Conversational response logic: polite, 1 question at a time, smooth & natural
+  // Build a set of questions Nova has already asked in this session
+  const alreadyAsked = new Set();
+  if (history && history.length > 0) {
+    history.forEach(item => {
+      if (item.role === 'model' || item.sender === 'nova') {
+        const t = (item.text || '').toLowerCase();
+        if (t.includes('what should i call you') || t.includes("what's your name") || t.includes('what is your name')) alreadyAsked.add('name');
+        if (t.includes('where on earth') || t.includes('reaching out from') || t.includes('sending this signal from') || t.includes('where are you')) alreadyAsked.add('location');
+        if (t.includes('how old are you') || t.includes('what is your age')) alreadyAsked.add('age');
+        if (t.includes('weighing on your heart') || t.includes('what brings you to the starways') || t.includes('what problem') || t.includes('what assistance')) alreadyAsked.add('grievance');
+        if (t.includes('email address')) alreadyAsked.add('email');
+      }
+    });
+  }
+
+  // Conversational response logic: polite, 1 question at a time, smooth, natural, and NEVER repeating questions
   if (!name) {
     if (isGreetingWord(lower)) {
       reply = "Hello there! I'm Nova, guardian of the Starways. What's your name, traveler?";
@@ -227,7 +242,7 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
       reply = "Greetings, traveler! I felt your presence in the cosmic beacon. What should I call you?";
     }
     intent = "collecting_information";
-  } else if (!profile.location) {
+  } else if (!profile.location && !alreadyAsked.has('location')) {
     if (updates.name) {
       reply = `Wonderful to meet you, ${name}! Where on Earth are you sending this signal from?`;
     } else if (mood === 'sad') {
@@ -236,15 +251,16 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
       reply = `I hear you loud and clear, ${name}. Where on Earth are you sending this signal from?`;
     }
     intent = "collecting_information";
-  } else if (!profile.age) {
-    if (updates.location) {
-      reply = `I can see ${updates.location} shining bright across the stars! How old are you, ${name}?`;
+  } else if (!profile.age && !alreadyAsked.has('age')) {
+    if (updates.location || profile.location) {
+      const loc = updates.location || profile.location;
+      reply = `I can see ${loc} shining bright across the stars! How old are you, ${name}?`;
     } else {
       reply = `Got it, ${name}. How old are you, traveler?`;
     }
     intent = "collecting_information";
-  } else if (!profile.grievance) {
-    if (updates.age) {
+  } else if (!profile.grievance && !alreadyAsked.has('grievance')) {
+    if (updates.age || profile.age) {
       reply = `Thank you, ${name}. Now tell me, what's weighing on your heart or what problem can I help you with today?`;
     } else if (mood === 'sad') {
       reply = `I'm right here with you, ${name}. Tell me, what's weighing on your heart?`;
@@ -252,18 +268,21 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
       reply = `Tell me, ${name}, what brings you to the Starways or what assistance do you seek?`;
     }
     intent = "grievance";
-  } else if (!profile.email) {
-    if (updates.grievance) {
+  } else if (!profile.email && !alreadyAsked.has('email')) {
+    if (updates.grievance || profile.grievance) {
       reply = `I understand completely, ${name}. What's your email address so our cosmic link stays unbroken?`;
     } else {
       reply = `Almost set, ${name}. What's your email address so our link stays unbroken?`;
     }
     intent = "collecting_information";
   } else {
-    if (updates.email) {
-      reply = `Email saved, ${name}! I've gathered all your signal coordinates. Whenever you're ready, head over to the Help Signals section in the menu to transmit your distress beacon!`;
+    // All details gathered OR already asked previously — NEVER loop back or repeat questions!
+    if (updates.email || profile.email) {
+      reply = `Signal coordinates locked, ${name}! All your details are aligned in the celestial archives. Whenever you're ready, head over to the Help Signals section in the menu to transmit your distress beacon!`;
+    } else if (!profile.email && !alreadyAsked.has('email')) {
+      reply = `What is your email address, ${name}, so our link stays unbroken?`;
     } else {
-      reply = `I've gathered all your signal details, ${name}! Head over to the Help Signals section in the menu whenever you wish to transmit your distress beacon.`;
+      reply = `I am watching over you, ${name}. Everything is recorded in the celestial archives. You can transmit your beacon from the Help Signals menu anytime you are ready!`;
     }
     intent = "submission";
   }
