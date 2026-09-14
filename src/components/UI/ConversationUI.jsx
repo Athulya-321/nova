@@ -18,6 +18,7 @@ export default function ConversationUI() {
   const [isTyping, setIsTyping] = useState(false);
 
   const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Initialize unique session ID if not already generated
   useEffect(() => {
@@ -25,6 +26,24 @@ export default function ConversationUI() {
       setConversationId(nanoid());
     }
   }, [conversationId, setConversationId]);
+
+  // Auto-focus chat typing input in Home section
+  useEffect(() => {
+    const focusTimer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 400);
+    return () => clearTimeout(focusTimer);
+  }, []);
+
+  // Re-focus input whenever Nova finishes typing so user can immediately respond
+  useEffect(() => {
+    if (!isTyping) {
+      const focusTimer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(focusTimer);
+    }
+  }, [isTyping]);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -46,14 +65,14 @@ export default function ConversationUI() {
     }
   };
 
-  // Initial Nova greeting: rich, warm, and cosmic
+  // Initial Nova greeting: simple, warm, and friendly
   useEffect(() => {
     if (conversationPhase === ConversationPhases.INTRO && chatHistory.length === 0) {
       const runIntro = async () => {
         await addNovaMessage([
-          "Greetings, celestial traveler! The constellation lanterns flicker as your presence ripples through the Starways.",
-          "I'm Nova, guardian of the cosmic beacons. What name do you carry in the realms below?"
-        ], 1200);
+          "Hey there! Welcome to the Starways.",
+          "I'm Nova, your cosmic guardian friend! What should I call you?"
+        ], 1000);
         advanceConversation(ConversationPhases.ASK_NAME, NovaEmotions.CURIOUS);
       };
       runIntro();
@@ -265,6 +284,7 @@ export default function ConversationUI() {
             </svg>
           </div>
           <input
+            ref={inputRef}
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}

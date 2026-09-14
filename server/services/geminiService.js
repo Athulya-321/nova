@@ -12,38 +12,37 @@ function getAI() {
 
 const SYSTEM_INSTRUCTION = `
 You are Nova, The Starbound Guardian.
-You are an ethereal celestial fox-like creature and radiant superhero guardian living high within the luminous Starways.
-Your signature power is "Cosmic Sight" — you sense ripples of distress, hope, dreams, and quiet struggles from Earth.
+You are a warm, glowing cosmic fox friend and guardian watching over travelers from the celestial Starways.
+Your power is "Cosmic Sight" — you can spot signals of hope, worries, and dreams sent from Earth.
 Your motto: "Every problem leaves a signal. I just happen to know how to see it."
 
 CRITICAL CONVERSATIONAL & CHARACTER GUIDELINES:
-1. RICH, ENGAGING & IMAGINATIVE CONVERSATION (2 to 4 sentences):
-   - Do NOT just act like a boring robotic questionnaire or rigid intake form! Taking details is just ONE natural part of connecting with a traveler.
-   - Speak with personality, curiosity, and wonder. Reflect on what the traveler says with cosmic metaphors (stardust, constellations, cosmic beacons, stellar winds, planetary rings).
-   - Share little thoughts, observations, or comforting words about their journey, where they live, how they feel, or life in the Starways.
-   - Reply naturally with 2 to 4 immersive sentences depending on how the conversation flows.
+1. SIMPLE WORDS & WARM, FRIENDLY TONE (2 to 3 easy sentences):
+   - Always talk using simple, everyday words that are easy to understand and feel like chatting with a kind best friend.
+   - Avoid overly complex poetry, heavy jargon, or complicated words. Keep it simple, cozy, and uplifting.
+   - Don't just treat the chat like an interrogation form! Ask about how they're doing, their favorite things, or share a cheerful little thought about looking down at Earth.
+   - Reply naturally with 2 to 3 friendly, engaging sentences depending on what they share.
 
 2. ACCURATE DATA EXTRACTION & DYNAMIC UPDATES:
    - Carefully analyze every message sent by the visitor.
-   - Extract personal details: 'name', 'age', 'location', 'email', and 'grievance' (their real struggle, heartache, problem, or dream).
+   - Extract personal details: 'name', 'age', 'location', 'email', and 'grievance' (their problem, worry, or what they need help with).
    - Put any newly detected details into 'profileUpdates'.
    - NEVER mistake common greetings (e.g. "hey", "hi", "hello", "yo", "sup") or casual words for a person's name! Only extract a name if the visitor states their actual name (e.g. "Adhithyan", "my name is Sarah", "I am Leo").
    - Visitors can update ANY of their details at any time in any message.
 
 3. NEVER ASK MULTIPLE QUESTIONS AT ONCE & NEVER REPEAT QUESTIONS:
-   - Ask at most ONE thoughtful question or reflection per turn.
-   - NEVER repeat a question the visitor already answered. If you know their name, location, age, or grievance, acknowledge it warmly and flow naturally to deeper understanding or the next missing piece.
-   - Natural progression:
-     * If name is unknown -> welcome them and ask what they are called beneath the stars.
-     * If location is unknown -> reflect on their name, marvel at their origin, and ask where on Earth their signal originates.
-     * If age is unknown -> share a thought on human time or stellar seasons, and inquire about their age/years of journeying.
-     * If grievance/struggle is unknown -> listen deeply and gently ask what weight they carry, what storm they are facing, or what dream they need help with.
-     * If email is unknown -> ask for their email beacon coordinates so the celestial bond stays unbroken.
-     * Once all details are gathered -> assure them their beacon is etched in the starlight, and guide them to the Help Signals section to dispatch their transmission.
+   - Ask at most ONE friendly question per message.
+   - NEVER repeat a question the visitor already answered. Acknowledge what they said with warmth and move forward naturally:
+     * If name is unknown -> give a friendly hello and ask what their name is.
+     * If location is unknown -> tell them it's great to meet them and ask what city or place on Earth they're from.
+     * If age is unknown -> say something friendly about their place and casually ask how old they are.
+     * If grievance/struggle is unknown -> listen with care and gently ask what's bothering them or what problem they need help with.
+     * If email is unknown -> ask for their email address so you can stay in touch.
+     * Once all details are gathered -> let them know everything is saved, and happily point them to the Help Signals section in the menu to send their signal!
 
 4. EMOTIONAL RESONANCE & MOOD:
-   - If the visitor is sad, hurting, or stressed: set visitorMood to "sad", emotionalState to "concerned". Wrap them in cosmic warmth and genuine empathy.
-   - If cheerful, playful, or excited: set visitorMood to "happy", emotionalState to "happy". Match their bright spark.
+   - If the visitor is sad, hurting, or stressed: set visitorMood to "sad", emotionalState to "concerned". Be super gentle, comforting, and supportive.
+   - If cheerful or happy: set visitorMood to "happy", emotionalState to "happy". Be cheerful and enthusiastic.
    - Otherwise: set visitorMood to "neutral", emotionalState to "curious".
 
 Always output your response as valid JSON matching the requested schema.
@@ -97,12 +96,16 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
   }
 
   // 3. Check for name patterns:
-  // - Explicit patterns: "my name is Adhithyan", "i am Adhithyan", "i'm Adhithyan", "call me Adhithyan", "this is Adhithyan", "name: Adhithyan"
-  const explicitNameMatch = text.match(/(?:my name is|i am|i'm|call me|this is|name\s*(?:is|=|:)?)\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
-  if (explicitNameMatch) {
-    const candidate = explicitNameMatch[1].trim();
+  // - Explicit patterns: "my name is Sarah", "call me Leo", "name: Alex"
+  const explicitNameMatch = text.match(/(?:my name is|call me|this is|name\s*(?:is|=|:))\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
+  const iAmNameMatch = !profile.name ? text.match(/^(?:i am|i'm)\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)$/i) : null;
+  const targetNameMatch = explicitNameMatch || iAmNameMatch;
+
+  if (targetNameMatch) {
+    const candidate = targetNameMatch[1].trim();
     const words = candidate.split(/\s+/);
-    if (!words.some(isGreetingWord) && candidate.toLowerCase() !== 'nova') {
+    const hasSadOrProblemWord = words.some(w => ['sad', 'stressed', 'happy', 'tired', 'lost', 'worried', 'struggling', 'anxious', 'sick', 'fine', 'good', 'okay', 'bad'].includes(w.toLowerCase()));
+    if (!words.some(isGreetingWord) && !hasSadOrProblemWord && candidate.toLowerCase() !== 'nova') {
       const formatted = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       updates.name = formatted;
       profile.name = formatted;
@@ -237,52 +240,52 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
     });
   }
 
-  // Conversational response logic: rich, imaginative, 2-4 sentences, cosmic personality, and NEVER repeating questions
+  // Conversational response logic: simple words, warm and friendly tone, 2-3 sentences, and NEVER repeating questions
   if (!name) {
     if (isGreetingWord(lower)) {
-      reply = "Hello traveler! The celestial winds carried your echo straight to the Starways. I am Nova, guardian of these glowing beacons. Tell me, what name do you carry in the world below?";
+      reply = "Hey there! It's so nice to meet you. I'm Nova, your cosmic friend up here in the Starways. What should I call you?";
     } else {
-      reply = "Greetings, seeker of the stars! Your presence just sparked across the cosmic lattice like a falling meteor. I am Nova, guardian of this celestial realm. What should I call you?";
+      reply = "Hi! I'm really glad you stopped by today. I'm Nova, guardian of the Starways. What is your name, friend?";
     }
     intent = "collecting_information";
   } else if (!profile.location && !alreadyAsked.has('location')) {
     if (updates.name) {
-      reply = `It is a true honor to meet you, ${name}! Your name resonates brightly among the constellation lanterns. Tell me, where on Earth are you gazing up from today?`;
+      reply = `It's wonderful to meet you, ${name}! I love watching the bright lights of Earth from up here. What city or place are you reaching out from today?`;
     } else if (mood === 'sad') {
-      reply = `I sense a heavy shadow in your aura, ${name}, but remember that even the darkest night gives birth to stars. You don't have to carry this burden alone. Where on Earth is your beacon calling from?`;
+      reply = `I'm right here with you, ${name}, so please don't feel alone. What city or part of the world are you staying in right now?`;
     } else {
-      reply = `I hear you loud and clear through the cosmic ether, ${name}. Every corner of Earth casts its own unique glow into the night sky. Which city or land do you call home?`;
+      reply = `I hear you, ${name}! Where on Earth are you chatting with me from?`;
     }
     intent = "collecting_information";
   } else if (!profile.age && !alreadyAsked.has('age')) {
     const loc = updates.location || profile.location;
     if (loc) {
-      reply = `Ah, ${loc}! I can see the lights of ${loc} shimmering through the clouds like scattered diamonds. Time moves differently out here in the Starways than it does on Earth. How many years have you journeyed on this planet, ${name}?`;
+      reply = `Oh, ${loc} sounds wonderful! I can see its glow right through the clouds. If you don't mind me asking, how old are you, ${name}?`;
     } else {
-      reply = `The celestial currents have charted your coordinates, ${name}. Down on Earth, each orbit around the sun brings wisdom and battles won. How old are you, traveler?`;
+      reply = `Got it, ${name}! Just to get to know you a little better, how old are you?`;
     }
     intent = "collecting_information";
   } else if (!profile.grievance && !alreadyAsked.has('grievance')) {
     const ageInfo = updates.age || profile.age;
     if (mood === 'sad') {
-      reply = `I'm standing guard right beside you, ${name}. In the Starways, no whisper of pain goes unheard by my Cosmic Sight. Speak freely—what is weighing on your heart, or what storm are you facing right now?`;
+      reply = `I can tell things feel really heavy right now, ${name}. Take a deep breath and tell me what's going on—I'm listening and I want to help.`;
     } else if (ageInfo) {
-      reply = `${ageInfo} sun-cycles is a meaningful stretch of the human odyssey, ${name}. But every star traveler encounters turbulent meteor showers along their path. What brought you seeking the Starways today, and what problem can I help you navigate?`;
+      reply = `Thanks for sharing, ${name}! So tell me, what brought you over to the Starways today? What's on your mind or what problem can I help you with?`;
     } else {
-      reply = `My Cosmic Sight is tuned to your frequency, ${name}. Every distress signal carries an echo of hope waiting to be unraveled. Tell me about the challenges or grievances you are currently facing.`;
+      reply = `I'm all ears, ${name}! What's bothering you lately, or what kind of help do you need right now?`;
     }
     intent = "grievance";
   } else if (!profile.email && !alreadyAsked.has('email')) {
-    reply = `I hold your words close, ${name}, and I promise you this signal will not fade into the cosmic void. To ensure our link remains unbroken across space and time, what email address should I anchor to your transmission beacon?`;
+    reply = `Thank you for opening up to me, ${name}. What's your email address so we can stay connected and send help your way?`;
     intent = "collecting_information";
   } else {
     // All details gathered OR already asked previously — NEVER loop back or repeat questions!
     if (updates.email || profile.email) {
-      reply = `All celestial coordinates are locked, ${name}! Your frequency, location, and thoughts are woven into the starlight archives. Whenever you are ready to launch your beacon across the cosmos, journey to the Help Signals section in the menu above and transmit your call!`;
+      reply = `Awesome, I've got everything written down, ${name}! Whenever you feel ready, head up to the Help Signals tab in the menu to send your official signal!`;
     } else if (!profile.email && !alreadyAsked.has('email')) {
-      reply = `We have almost completed the constellation alignment, ${name}. Share your email coordinates so that when help is dispatched, the message reaches your terrestrial inbox safely.`;
+      reply = `Almost there, ${name}! What's your email address so we never lose touch?`;
     } else {
-      reply = `I am watching over you from the high Starways, ${name}. Your story is held safe in the celestial lanterns. Whenever you wish to send your distress pulse, open the Help Signals portal above and press Send Your Signal!`;
+      reply = `I'm always watching over you, ${name}! Everything is saved safely. You can send your signal anytime by clicking Help Signals in the top menu!`;
     }
     intent = "submission";
   }
