@@ -26,15 +26,16 @@ CRITICAL RULES FOR YOUR REPLIES:
 2. KEEP IT SHORT & CONVERSATIONAL (1 to 2 brief sentences max):
    - Speak warmly, casually, and naturally like a cosmic guardian companion.
    - Absolutely NO walls of text or long paragraphs.
-3. NEVER ASK MULTIPLE QUESTIONS AT ONCE:
+3. NEVER ASK MULTIPLE QUESTIONS AT ONCE & NEVER REPEAT QUESTIONS:
    - STRICT RULE: Ask at most ONE simple question per reply.
+   - NEVER repeat a question if the user has already answered it! If you asked where they are from and they answer with a city/state/country like "Kerala", "London", or "India", immediately extract that as their location and advance to the next step.
    - Flow naturally:
      * If name is unknown -> ask for their name.
-     * If problem/grievance is unknown -> ask what is troubling them or what they need help with.
      * If location is unknown -> ask where on Earth they are reaching out from.
      * If age is unknown -> ask their age.
+     * If problem/grievance is unknown -> ask what is troubling them or what they need help with.
      * If email is unknown -> ask for their email address.
-     * Once all details (name, grievance, location, age, email) are gathered -> inform them that their signal details are ready and they can transmit anytime from the Help Signals section in the navigation menu!
+     * Once all details (name, location, age, grievance, email) are gathered -> inform them that their signal details are ready and they can transmit anytime from the Help Signals section in the navigation menu!
 4. NEVER RE-ASK FOR ALREADY PROVIDED DETAILS:
    - If the user provides details in earlier messages or all at once, analyze and extract them immediately without re-asking.
 5. MOOD DYNAMICS:
@@ -108,13 +109,28 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
     // NEVER accept greetings, slang, or generic emotional/conversational terms as a name
     const rawWords = text.trim().split(/\s+/);
     const cleanWords = rawWords.map(w => w.replace(/[^a-zA-Z]/g, '')).filter(Boolean);
-    
+
+    // Check what Nova asked in the previous model message (context-awareness)
+    let lastNovaQuestion = '';
+    if (history && history.length > 0) {
+      for (let i = history.length - 1; i >= 0; i--) {
+        const item = history[i];
+        if (item.role === 'model' || item.sender === 'nova') {
+          lastNovaQuestion = (item.text || '').toLowerCase();
+          break;
+        }
+      }
+    }
+
     if (cleanWords.length >= 1 && cleanWords.length <= 2) {
       const containsGreeting = cleanWords.some(isGreetingWord);
       const isTooShort = cleanWords[0].length < 2;
       const looksLikeEmotion = ['sad', 'happy', 'depressed', 'lonely', 'lost', 'crying', 'fine', 'tired'].includes(cleanWords[0].toLowerCase());
       
-      if (!containsGreeting && !isTooShort && !looksLikeEmotion && !emailMatch) {
+      // If Nova asked for location, don't interpret user response as name
+      const askedLocation = lastNovaQuestion.includes('where on earth') || lastNovaQuestion.includes('reaching out from') || lastNovaQuestion.includes('sending this signal from') || lastNovaQuestion.includes('where are you');
+      
+      if (!containsGreeting && !isTooShort && !looksLikeEmotion && !emailMatch && !askedLocation) {
         const formatted = cleanWords.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         updates.name = formatted;
         profile.name = formatted;
@@ -122,7 +138,7 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
     }
   }
 
-  // 4. Check for location (e.g. "from London", "in India", "live in Tokyo", "location is Kerala", "at Delhi")
+  // 4. Check for location (e.g. "from London", "in India", "live in Tokyo", "location is Kerala", "at Delhi", or standalone "Kerala")
   const locExplicitMatch = text.match(/(?:location\s*(?:is|=|:)\s*|from\s+|living in\s+|live in\s+|in\s+|at\s+)([a-zA-Z\s]+)/i);
   if (locExplicitMatch) {
     const candidate = locExplicitMatch[1].trim().split(/[.,!?\n]/)[0].trim();
@@ -132,6 +148,35 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
         const formatted = candidate.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         updates.location = formatted;
         profile.location = formatted;
+      }
+    }
+  } else if (!profile.location) {
+    // Contextual detection: Did Nova just ask where the user is from, or is name already set?
+    let askedLocation = false;
+    if (history && history.length > 0) {
+      for (let i = history.length - 1; i >= 0; i--) {
+        const item = history[i];
+        if (item.role === 'model' || item.sender === 'nova') {
+          const t = (item.text || '').toLowerCase();
+          if (t.includes('where on earth') || t.includes('reaching out from') || t.includes('sending this signal from') || t.includes('where are you')) {
+            askedLocation = true;
+          }
+          break;
+        }
+      }
+    }
+
+    const words = text.trim().split(/\s+/);
+    // If Nova asked for location, or if we have name & grievance and user inputs 1-3 words
+    if (askedLocation || (profile.name && profile.grievance && words.length <= 3)) {
+      const cleanCandidate = text.replace(/[^a-zA-Z\s]/g, '').trim();
+      const lowerCandidate = cleanCandidate.toLowerCase();
+      if (cleanCandidate.length >= 2 && cleanCandidate.length <= 35) {
+        if (!isGreetingWord(lowerCandidate) && !['yes', 'no', 'ok', 'okay', 'help', 'earth', 'none'].includes(lowerCandidate) && !emailMatch) {
+          const formatted = cleanCandidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+          updates.location = formatted;
+          profile.location = formatted;
+        }
       }
     }
   }
@@ -182,28 +227,44 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
       reply = "Greetings, traveler! I felt your presence in the cosmic beacon. What should I call you?";
     }
     intent = "collecting_information";
-  } else if (!profile.grievance) {
-    if (mood === 'sad') {
-      reply = `I'm right here with you, ${name}. Tell me, what's weighing on your heart?`;
-    } else {
-      reply = `Wonderful to meet you, ${name}! What brings you to the Starways today?`;
-    }
-    intent = "grievance";
   } else if (!profile.location) {
-    if (mood === 'sad') {
+    if (updates.name) {
+      reply = `Wonderful to meet you, ${name}! Where on Earth are you sending this signal from?`;
+    } else if (mood === 'sad') {
       reply = `You don't have to carry this alone, ${name}. Where on Earth are you reaching out from?`;
     } else {
       reply = `I hear you loud and clear, ${name}. Where on Earth are you sending this signal from?`;
     }
     intent = "collecting_information";
   } else if (!profile.age) {
-    reply = `Got it, ${name}. How old are you, traveler?`;
+    if (updates.location) {
+      reply = `I can see ${updates.location} shining bright across the stars! How old are you, ${name}?`;
+    } else {
+      reply = `Got it, ${name}. How old are you, traveler?`;
+    }
     intent = "collecting_information";
+  } else if (!profile.grievance) {
+    if (updates.age) {
+      reply = `Thank you, ${name}. Now tell me, what's weighing on your heart or what problem can I help you with today?`;
+    } else if (mood === 'sad') {
+      reply = `I'm right here with you, ${name}. Tell me, what's weighing on your heart?`;
+    } else {
+      reply = `Tell me, ${name}, what brings you to the Starways or what assistance do you seek?`;
+    }
+    intent = "grievance";
   } else if (!profile.email) {
-    reply = `Almost set, ${name}. What's your email address so our link stays unbroken?`;
+    if (updates.grievance) {
+      reply = `I understand completely, ${name}. What's your email address so our cosmic link stays unbroken?`;
+    } else {
+      reply = `Almost set, ${name}. What's your email address so our link stays unbroken?`;
+    }
     intent = "collecting_information";
   } else {
-    reply = `I've gathered all your signal details, ${name}! Head over to the Help Signals section in the menu whenever you wish to transmit your distress beacon.`;
+    if (updates.email) {
+      reply = `Email saved, ${name}! I've gathered all your signal coordinates. Whenever you're ready, head over to the Help Signals section in the menu to transmit your distress beacon!`;
+    } else {
+      reply = `I've gathered all your signal details, ${name}! Head over to the Help Signals section in the menu whenever you wish to transmit your distress beacon.`;
+    }
     intent = "submission";
   }
 
