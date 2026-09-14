@@ -15,18 +15,7 @@ export default function ConversationUI() {
   } = useNova();
   
   const [inputValue, setInputValue] = useState('');
-  const [emailStatus, setEmailStatus] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  
-  // Local edit states for confirmation modal
-  const [editFields, setEditFields] = useState({
-    name: '',
-    age: '',
-    location: '',
-    email: '',
-    grievance: ''
-  });
 
   const chatEndRef = useRef(null);
 
@@ -36,17 +25,6 @@ export default function ConversationUI() {
       setConversationId(nanoid());
     }
   }, [conversationId, setConversationId]);
-
-  // Sync confirmation modal fields with visitorData
-  useEffect(() => {
-    setEditFields({
-      name: visitorData.name || '',
-      age: visitorData.age || '',
-      location: visitorData.location || '',
-      email: visitorData.email || '',
-      grievance: visitorData.problem || visitorData.grievance || ''
-    });
-  }, [visitorData, conversationPhase]);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -155,11 +133,10 @@ export default function ConversationUI() {
       setIsTyping(false);
       setChatHistory(prev => [...prev, { sender: 'nova', text: data.reply }]);
 
-      // Check if we reached the submission intent
+      // If submission intent is reached, Nova invites traveler to Help Signals section
+      // without popping up any blocking modal in the chatbox
       if (data.conversationIntent === 'submission') {
-        setTimeout(() => {
-          advanceConversation(ConversationPhases.CONFIRMATION, NovaEmotions.POWER_ACTIVATION, NovaStates.COSMIC_SIGHT);
-        }, 1500);
+        advanceConversation(ConversationPhases.FINISHED, NovaEmotions.HAPPY, NovaStates.IDLE);
       }
 
     } catch (err) {
@@ -178,72 +155,6 @@ export default function ConversationUI() {
       e.preventDefault();
       handleSend();
     }
-  };
-
-  const confirmSignal = async () => {
-    // Client-side completeness check using latest editFields / visitorData
-    const finalName = editFields.name?.trim() || visitorData.name?.trim();
-    const finalAge = editFields.age?.trim() || visitorData.age?.trim();
-    const finalLoc = editFields.location?.trim() || visitorData.location?.trim();
-    const finalEmail = editFields.email?.trim() || visitorData.email?.trim();
-    const finalGrievance = editFields.grievance?.trim() || visitorData.problem?.trim() || visitorData.grievance?.trim();
-
-    const missing = [];
-    if (!finalName) missing.push('name');
-    if (!finalAge) missing.push('age');
-    if (!finalLoc) missing.push('location');
-    if (!finalEmail) missing.push('email');
-
-    if (missing.length > 0) {
-      setErrorMsg(`Please share your ${missing.join(', ')} with Nova before transmitting.`);
-      return;
-    }
-
-    addNovaMessage(["Transmitting your signal across the Starways..."]);
-    advanceConversation(ConversationPhases.SIGNAL_RECEIVED, NovaEmotions.POWER_ACTIVATION);
-    setEmailStatus('sending');
-    setErrorMsg('');
-    
-    try {
-      const response = await fetch('http://localhost:3001/api/submit-grievance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          name: finalName,
-          age: finalAge,
-          location: finalLoc,
-          email: finalEmail,
-          grievance: finalGrievance
-        })
-      });
-      
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || 'The signal could not be delivered.');
-      }
-
-      addNovaMessage([
-        "Your signal has been received.",
-        "Your star isn't lost, traveler. You just couldn't see it yet."
-      ]);
-      advanceConversation(ConversationPhases.FINISHED, NovaEmotions.SUCCESS, NovaStates.SUCCESS);
-      setEmailStatus('sent');
-      
-    } catch (error) {
-      console.error("Submission failed:", error);
-      setEmailStatus('error');
-      setErrorMsg(error.message || "The signal could not be delivered.");
-      
-      addNovaMessage(["I couldn't send your signal just yet. Something interrupted the Starway."]);
-      advanceConversation(ConversationPhases.CONFIRMATION, NovaEmotions.CONCERNED, NovaStates.IDLE);
-    }
-  };
-
-  const cancelSignal = () => {
-    addNovaMessage(["Take your time. I will be here when you are ready."]);
-    advanceConversation(ConversationPhases.ASK_PROBLEM, NovaEmotions.HAPPY, NovaStates.IDLE);
   };
 
   if (conversationPhase === ConversationPhases.NONE) return null;
@@ -329,199 +240,8 @@ export default function ConversationUI() {
         <div ref={chatEndRef} />
       </div>
 
-      {/* Interactive Signal Confirmation Panel */}
-      <AnimatePresence>
-        {conversationPhase === ConversationPhases.CONFIRMATION && !isTyping && (
-          <motion.div 
-            key="signal-modal"
-            initial={{ opacity: 0, scale: 0.85, y: 30 }} 
-            animate={{ opacity: 1, scale: 1, y: 0 }} 
-            exit={{ opacity: 0, scale: 0.75, y: -40, filter: 'blur(8px)' }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            style={{ 
-              position: 'absolute', top: '160px', left: '50%', transform: 'translateX(-50%)', 
-              background: 'radial-gradient(circle at 50% 0%, rgba(25, 20, 55, 0.95) 0%, rgba(10, 9, 24, 0.98) 100%)', 
-              padding: '28px', borderRadius: '22px', 
-              border: '1px solid rgba(125, 226, 255, 0.4)', 
-              width: '460px', maxWidth: '92vw', pointerEvents: 'auto', 
-              backdropFilter: 'blur(16px)',
-              boxShadow: '0 0 45px rgba(125, 226, 255, 0.25), 0 0 90px rgba(170, 59, 255, 0.2)'
-            }}
-          >
-          {/* Header & Detach Button */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: 'var(--nova-core)', fontSize: '18px' }}>✦</span>
-              <h3 style={{ color: 'var(--nova-core)', margin: 0, fontFamily: 'var(--font-display)', letterSpacing: '2px', fontSize: '16px' }}>
-                SIGNAL BEACON
-              </h3>
-            </div>
-
-            <button 
-              onClick={cancelSignal}
-              disabled={emailStatus === 'sending'}
-              style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#cbd5e1',
-                borderRadius: '16px',
-                padding: '4px 12px',
-                fontSize: '11px',
-                letterSpacing: '1px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'; e.currentTarget.style.color = '#cbd5e1'; }}
-            >
-              Detach
-            </button>
-          </div>
-
-          <p style={{ color: 'var(--text-secondary)', fontSize: '12px', margin: '0 0 16px', lineHeight: '1.4' }}>
-            Details gathered by Nova are auto-filled below. You can refine any field before beaming your signal to <strong style={{ color: 'var(--nova-core)' }}>nova0hero@gmail.com</strong>.
-          </p>
-          
-          {errorMsg && (
-            <div style={{ color: '#ff6b6b', background: 'rgba(255,0,0,0.15)', border: '1px solid #ff6b6b', padding: '10px 12px', borderRadius: '10px', marginBottom: '15px', fontSize: '12px' }}>
-              {errorMsg}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                  Name <span style={{ color: 'var(--nova-core)' }}>*</span>
-                </label>
-                <input 
-                  type="text" 
-                  value={editFields.name}
-                  onChange={(e) => {
-                    setEditFields(prev => ({ ...prev, name: e.target.value }));
-                    updateVisitorData('name', e.target.value);
-                  }}
-                  placeholder="Your Name"
-                  style={{
-                    width: '100%', padding: '8px 12px', borderRadius: '8px',
-                    background: 'rgba(5, 5, 15, 0.8)', border: '1px solid rgba(125, 226, 255, 0.25)',
-                    color: '#fff', fontSize: '13px', outline: 'none'
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                  Age <span style={{ color: 'var(--nova-core)' }}>*</span>
-                </label>
-                <input 
-                  type="text" 
-                  value={editFields.age}
-                  onChange={(e) => {
-                    setEditFields(prev => ({ ...prev, age: e.target.value }));
-                    updateVisitorData('age', e.target.value);
-                  }}
-                  placeholder="e.g. 21"
-                  style={{
-                    width: '100%', padding: '8px 12px', borderRadius: '8px',
-                    background: 'rgba(5, 5, 15, 0.8)', border: '1px solid rgba(125, 226, 255, 0.25)',
-                    color: '#fff', fontSize: '13px', outline: 'none'
-                  }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                  Location <span style={{ color: 'var(--nova-core)' }}>*</span>
-                </label>
-                <input 
-                  type="text" 
-                  value={editFields.location}
-                  onChange={(e) => {
-                    setEditFields(prev => ({ ...prev, location: e.target.value }));
-                    updateVisitorData('location', e.target.value);
-                  }}
-                  placeholder="City / Country"
-                  style={{
-                    width: '100%', padding: '8px 12px', borderRadius: '8px',
-                    background: 'rgba(5, 5, 15, 0.8)', border: '1px solid rgba(125, 226, 255, 0.25)',
-                    color: '#fff', fontSize: '13px', outline: 'none'
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                  Email <span style={{ color: 'var(--nova-core)' }}>*</span>
-                </label>
-                <input 
-                  type="email" 
-                  value={editFields.email}
-                  onChange={(e) => {
-                    setEditFields(prev => ({ ...prev, email: e.target.value }));
-                    updateVisitorData('email', e.target.value);
-                  }}
-                  placeholder="you@email.com"
-                  style={{
-                    width: '100%', padding: '8px 12px', borderRadius: '8px',
-                    background: 'rgba(5, 5, 15, 0.8)', border: '1px solid rgba(125, 226, 255, 0.25)',
-                    color: '#fff', fontSize: '13px', outline: 'none'
-                  }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '10px', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
-                Content to be Sent (Problem / Request)
-              </label>
-              <textarea 
-                rows={3}
-                value={editFields.grievance}
-                onChange={(e) => {
-                  setEditFields(prev => ({ ...prev, grievance: e.target.value }));
-                  updateVisitorData('problem', e.target.value);
-                  updateVisitorData('grievance', e.target.value);
-                }}
-                placeholder="Write or refine the problem you wish to transmit..."
-                style={{
-                  width: '100%', padding: '8px 12px', borderRadius: '8px',
-                  background: 'rgba(5, 5, 15, 0.8)', border: '1px solid rgba(170, 59, 255, 0.35)',
-                  color: '#fff', fontSize: '13px', outline: 'none', resize: 'vertical'
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button 
-              onClick={confirmSignal} 
-              disabled={emailStatus === 'sending'} 
-              style={{ 
-                flex: 1, padding: '12px', 
-                background: emailStatus === 'sending' ? '#555' : 'linear-gradient(90deg, var(--nova-core) 0%, var(--portal-core) 100%)', 
-                color: '#06050e', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', letterSpacing: '1px' 
-              }}
-            >
-              {emailStatus === 'sending' ? 'TRANSMITTING...' : 'SEND SIGNAL'}
-            </button>
-            <button 
-              onClick={cancelSignal} 
-              disabled={emailStatus === 'sending'} 
-              style={{ 
-                padding: '12px 18px', background: 'transparent', color: 'var(--text-dim)', 
-                border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', cursor: 'pointer' 
-              }}
-            >
-              Detach
-            </button>
-          </div>
-        </motion.div>
-      )}
-      </AnimatePresence>
-
-      {/* Input Bar */}
-      {conversationPhase !== ConversationPhases.FINISHED && conversationPhase !== ConversationPhases.CONFIRMATION && (
+      {/* Input Bar - Always active in chatbox */}
+      {conversationPhase !== ConversationPhases.SIGNAL_RECEIVED && (
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -549,12 +269,12 @@ export default function ConversationUI() {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your message here..."
-            disabled={emailStatus === 'sending' || isTyping}
+            disabled={isTyping}
             style={{
               flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '15px', fontFamily: 'var(--font-primary)', outline: 'none'
             }}
           />
-          <button onClick={handleSend} disabled={emailStatus === 'sending' || isTyping || !inputValue.trim()} style={{
+          <button onClick={handleSend} disabled={isTyping || !inputValue.trim()} style={{
             background: 'rgba(255, 255, 255, 0.1)', border: 'none', width: '40px', height: '40px', borderRadius: '50%',
             display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer',
             color: 'var(--nova-core)', transition: 'all 0.3s'

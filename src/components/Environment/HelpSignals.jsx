@@ -4,7 +4,7 @@ import { Send, ArrowRight, X, Sparkles, AlertCircle, CheckCircle2 } from 'lucide
 import { useNova } from '../../context/NovaContext';
 
 export default function HelpSignals() {
-  const { visitorData, updateVisitorData } = useNova();
+  const { visitorData, updateVisitorData, conversationId } = useNova();
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
@@ -71,7 +71,7 @@ export default function HelpSignals() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conversationId: 'direct_signal_' + Date.now(),
+          conversationId: conversationId || ('direct_signal_' + Date.now()),
           name: formData.name.trim(),
           age: formData.age.trim(),
           location: formData.location.trim(),
