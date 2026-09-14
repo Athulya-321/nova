@@ -92,19 +92,37 @@ export default function ConversationUI() {
     setIsTyping(true);
     
     try {
-      const response = await fetch('http://localhost:3001/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          message: val,
-          visitorProfile: visitorData,
-          conversationHistory: chatHistory.map(msg => ({
-            role: msg.sender === 'nova' ? 'model' : 'user',
-            text: msg.text
-          }))
-        })
-      });
+      let response;
+      try {
+        response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId,
+            message: val,
+            visitorProfile: visitorData,
+            conversationHistory: chatHistory.map(msg => ({
+              role: msg.sender === 'nova' ? 'model' : 'user',
+              text: msg.text
+            }))
+          })
+        });
+      } catch (e) {
+        // Fallback to direct backend URL if proxy is unavailable
+        response = await fetch('http://localhost:3001/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId,
+            message: val,
+            visitorProfile: visitorData,
+            conversationHistory: chatHistory.map(msg => ({
+              role: msg.sender === 'nova' ? 'model' : 'user',
+              text: msg.text
+            }))
+          })
+        });
+      }
 
       if (!response.ok) {
         throw new Error('Signal interference');
@@ -163,9 +181,16 @@ export default function ConversationUI() {
       console.error('Chat error:', err);
       setIsTyping(false);
       const travelerName = visitorData.name ? `, ${visitorData.name}` : '';
+      const fallbackOptions = [
+        `I hear you${travelerName}! What else is on your mind?`,
+        `Got it${travelerName}. Tell me a bit more, I'm right here listening.`,
+        `I understand${travelerName}. How are you feeling right now?`,
+        `I'm listening closely${travelerName}. What would you like to share next?`
+      ];
+      const randomReply = fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)];
       setChatHistory(prev => [...prev, { 
         sender: 'nova', 
-        text: `I'm right here with you${travelerName}. Take a deep breath and tell me once more—I am listening closely.` 
+        text: randomReply 
       }]);
     }
   };
