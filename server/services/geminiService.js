@@ -56,14 +56,24 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
   const profile = { ...(currentProfile || {}) };
   const updates = {};
 
-  // Common greetings and non-name words to NEVER mistake for a name
+  // Common greetings, casual slang, and non-name words to NEVER mistake for a name
   const greetingsAndStopWords = new Set([
-    'hey', 'hi', 'hello', 'hola', 'yo', 'sup', 'hiya', 'greetings', 'nova',
-    'ok', 'okay', 'yes', 'no', 'yeah', 'yep', 'nope', 'fine', 'good', 'bad',
-    'thanks', 'thank you', 'please', 'help', 'sad', 'happy', 'cool', 'nice',
-    'test', 'nothing', 'sure', 'why', 'what', 'who', 'how', 'when', 'where',
-    'here', 'there', 'star', 'starways', 'guardian', 'friend', 'traveler'
+    'hey', 'heyy', 'heyyy', 'hi', 'hii', 'hiii', 'hello', 'helloo', 'hlo', 'hllo', 'hola', 'yo', 'sup', 'hiya', 'greetings', 'nova',
+    'ok', 'okay', 'okk', 'yes', 'no', 'yeah', 'yep', 'nope', 'nah', 'fine', 'good', 'bad',
+    'thanks', 'thank you', 'thx', 'ty', 'please', 'help', 'sad', 'happy', 'cool', 'nice', 'awesome', 'great',
+    'test', 'testing', 'nothing', 'sure', 'why', 'what', 'who', 'how', 'when', 'where',
+    'here', 'there', 'star', 'starways', 'guardian', 'friend', 'traveler', 'buddy', 'bro', 'dude',
+    'good morning', 'good afternoon', 'good evening', 'good night', 'gm', 'gn'
   ]);
+
+  // Helper to check if a word/text is a greeting or conversational filler
+  const isGreetingWord = (w) => {
+    if (!w) return false;
+    const clean = w.toLowerCase().replace(/[^a-z]/g, '');
+    if (greetingsAndStopWords.has(clean)) return true;
+    if (/^h+e+y+$/i.test(clean) || /^h+i+$/i.test(clean) || /^h+e+l+o+$/i.test(clean) || /^h+l+o+$/i.test(clean)) return true;
+    return false;
+  };
 
   // 1. Check for email (any context, updates existing or sets new)
   const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
@@ -83,24 +93,29 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
   }
 
   // 3. Check for name patterns:
-  // - Explicit phrases: "my name is Adhithyan", "i am Adhithyan", "i'm Adhithyan", "call me Adhithyan", "this is Adhithyan"
-  // - Single/double word only IF it is not a greeting or common word
-  const explicitNameMatch = text.match(/(?:my name is|i am|i'm|call me|this is)\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
+  // - Explicit patterns: "my name is Adhithyan", "i am Adhithyan", "i'm Adhithyan", "call me Adhithyan", "this is Adhithyan", "name: Adhithyan"
+  const explicitNameMatch = text.match(/(?:my name is|i am|i'm|call me|this is|name\s*(?:is|=|:)?)\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
   if (explicitNameMatch) {
     const candidate = explicitNameMatch[1].trim();
-    const firstWord = candidate.split(' ')[0].toLowerCase();
-    if (!greetingsAndStopWords.has(firstWord) && candidate.toLowerCase() !== 'nova') {
-      const formatted = candidate.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    const words = candidate.split(/\s+/);
+    if (!words.some(isGreetingWord) && candidate.toLowerCase() !== 'nova') {
+      const formatted = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       updates.name = formatted;
       profile.name = formatted;
     }
   } else if (!profile.name) {
-    // If name not set yet, test if user entered just their name (1-2 words), e.g. "Adhithyan" or "Adhithyan V"
-    const words = text.split(/\s+/).map(w => w.replace(/[^a-zA-Z]/g, '')).filter(Boolean);
-    if (words.length >= 1 && words.length <= 2) {
-      const isGreeting = words.some(w => greetingsAndStopWords.has(w.toLowerCase()));
-      if (!isGreeting && !emailMatch && words[0].length >= 2) {
-        const formatted = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    // If name not set yet, check if the user provided ONLY their name (1-2 real words)
+    // NEVER accept greetings, slang, or generic emotional/conversational terms as a name
+    const rawWords = text.trim().split(/\s+/);
+    const cleanWords = rawWords.map(w => w.replace(/[^a-zA-Z]/g, '')).filter(Boolean);
+    
+    if (cleanWords.length >= 1 && cleanWords.length <= 2) {
+      const containsGreeting = cleanWords.some(isGreetingWord);
+      const isTooShort = cleanWords[0].length < 2;
+      const looksLikeEmotion = ['sad', 'happy', 'depressed', 'lonely', 'lost', 'crying', 'fine', 'tired'].includes(cleanWords[0].toLowerCase());
+      
+      if (!containsGreeting && !isTooShort && !looksLikeEmotion && !emailMatch) {
+        const formatted = cleanWords.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         updates.name = formatted;
         profile.name = formatted;
       }
@@ -113,7 +128,7 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
     const candidate = locExplicitMatch[1].trim().split(/[.,!?\n]/)[0].trim();
     if (candidate && candidate.length >= 2 && candidate.length <= 35) {
       const lowerCandidate = candidate.toLowerCase();
-      if (!greetingsAndStopWords.has(lowerCandidate) && !['the', 'a', 'school', 'trouble', 'home', 'earth', 'sad', 'happy', 'pain'].includes(lowerCandidate)) {
+      if (!isGreetingWord(lowerCandidate) && !['the', 'a', 'school', 'trouble', 'home', 'earth', 'sad', 'happy', 'pain'].includes(lowerCandidate)) {
         const formatted = candidate.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         updates.location = formatted;
         profile.location = formatted;
@@ -161,8 +176,8 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
 
   // Conversational response logic: polite, 1 question at a time, smooth & natural
   if (!name) {
-    if (greetingsAndStopWords.has(lower.replace(/[^a-zA-Z]/g, ''))) {
-      reply = "Hey there! I am Nova, guardian of the Starways. What's your name, traveler?";
+    if (isGreetingWord(lower)) {
+      reply = "Hello there! I'm Nova, guardian of the Starways. What's your name, traveler?";
     } else {
       reply = "Greetings, traveler! I felt your presence in the cosmic beacon. What should I call you?";
     }
@@ -269,6 +284,12 @@ export async function generateNovaResponse(message, history, currentProfile) {
     });
 
     const result = JSON.parse(response.text);
+
+    // Double-check and sanitize profileUpdates so greetings like 'hlo', 'hey', 'hello' are NEVER accepted as names
+    if (result.profileUpdates?.name && isGreetingWord(result.profileUpdates.name)) {
+      delete result.profileUpdates.name;
+    }
+
     return result;
   } catch (error) {
     console.warn("⚠️ Gemini API encountered an issue (e.g. rate limit/quota), using intelligent superhero heuristic fallback:", error.message || error);
