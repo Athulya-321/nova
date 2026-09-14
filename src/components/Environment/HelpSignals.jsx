@@ -427,9 +427,9 @@ export default function HelpSignals() {
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 70, pointerEvents: 'none' }}>
             
             <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
-              {/* 1. The lingering path of the shooting star */}
+              {/* 1. The lingering path of the shooting star (originating exactly from button center: 50% 70%) */}
               <motion.line
-                x1="42%" y1="71%" x2="100%" y2="-10%"
+                x1="50%" y1="70%" x2="100%" y2="-10%"
                 stroke="rgba(125, 226, 255, 0.5)"
                 strokeWidth="2"
                 strokeDasharray="4 6"
@@ -440,13 +440,13 @@ export default function HelpSignals() {
               
               {/* 2. The Shooting Star Tail (Solid bright gradient line) */}
               <motion.line
-                x1="42%" y1="71%" x2="100%" y2="-10%"
+                x1="50%" y1="70%" x2="100%" y2="-10%"
                 stroke="url(#shootingStarGrad)"
                 strokeWidth="6"
                 strokeLinecap="round"
                 initial={{ pathLength: 0, pathOffset: 0, opacity: 0 }}
                 animate={{ 
-                  pathLength: [0, 0.3, 0], // Tail grows then shrinks
+                  pathLength: [0, 0.35, 0], // Tail grows then shrinks
                   pathOffset: [0, 0.7, 1], // Tail moves along the path
                   opacity: [0, 1, 1, 0] 
                 }}
@@ -463,22 +463,22 @@ export default function HelpSignals() {
               </defs>
             </svg>
 
-            {/* 3. The Bright Head of the Shooting Star */}
+            {/* 3. The Bright Head of the Shooting Star (originating exactly from button center: left 50%, top 70%) */}
             <motion.div
-              initial={{ top: '71%', left: '42%', opacity: 0, scale: 0 }}
+              initial={{ top: '70%', left: '50%', opacity: 0, scale: 0 }}
               animate={{ 
                 top: '-10%', 
                 left: '100%', 
                 opacity: [0, 1, 1, 0], 
-                scale: [0, 1, 1, 0] 
+                scale: [0.5, 1.2, 1, 0] 
               }}
               transition={{ duration: 1.2, ease: "easeIn" }}
               style={{
                 position: 'absolute',
-                width: '16px', height: '16px',
+                width: '18px', height: '18px',
                 background: '#fff',
                 borderRadius: '50%',
-                boxShadow: '0 0 20px 10px #fff, 0 0 40px 20px #7DE2FF',
+                boxShadow: '0 0 25px 12px #fff, 0 0 50px 25px #7DE2FF',
                 transform: 'translate(-50%, -50%)',
                 zIndex: 71
               }}
