@@ -108,6 +108,7 @@ export default function StoryExperience() {
                 backgroundImage: `url('${slide.bg}')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
+                imageRendering: '-webkit-optimize-contrast',
                 boxShadow: isActive ? '0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(125, 226, 255, 0.4)' : '0 10px 30px rgba(0,0,0,0.6)',
                 overflow: 'hidden',
                 display: 'flex',

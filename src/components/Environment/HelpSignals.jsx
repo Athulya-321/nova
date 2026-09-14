@@ -96,7 +96,7 @@ export default function HelpSignals() {
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 60, background: '#000', overflow: 'hidden' }}>
       
-      {/* Background Image */}
+      {/* Ultra High Quality Lossless Background Image */}
       <motion.div
         animate={
           isSending || isPopupOpen 
@@ -106,9 +106,11 @@ export default function HelpSignals() {
         transition={{ duration: 0.4, ease: "easeInOut" }}
         style={{
           position: 'absolute', width: '100%', height: '100%', zIndex: 1,
-          backgroundImage: 'url("/media_1789286908868.jpg")',
+          backgroundImage: 'url("/helpsignal.png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          imageRendering: '-webkit-optimize-contrast',
           transformOrigin: 'center'
         }}
       />

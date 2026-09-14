@@ -37,13 +37,17 @@ export default function PowersExperience() {
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 60, background: '#000', overflow: 'hidden' }}>
       
-      {/* Clean Background Image */}
+      {/* High Definition Clean Background Image */}
       <motion.div
         animate={{ filter: powerActive ? 'brightness(0.3) contrast(1.2)' : 'brightness(1) contrast(1)' }}
         transition={{ duration: 1 }}
         style={{ 
           position: 'absolute', width: '100%', height: '100%',
-          backgroundImage: 'url(/nova_powers_clean_bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center'
+          backgroundImage: 'url(/powers.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          imageRendering: '-webkit-optimize-contrast'
         }}
       />
       
