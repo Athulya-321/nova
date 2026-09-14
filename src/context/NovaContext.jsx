@@ -73,17 +73,23 @@ export const NovaProvider = ({ children }) => {
   const [appMode, setAppMode] = useState(AppModes.HOME);
   const [visitorMood, setVisitorMood] = useState('neutral'); // 'sad', 'dull', 'happy', 'neutral'
   
+  const [chatHistory, setChatHistory] = useState([]);
+  const [conversationId, setConversationId] = useState(() => 'conv_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36));
+
   const [visitorData, setVisitorData] = useState({
     name: '',
     age: '',
     location: '',
     email: '',
     problem: '',
+    grievance: ''
   });
 
   const updateVisitorData = (key, value) => {
     setVisitorData(prev => {
       const updated = { ...prev, [key]: value };
+      if (key === 'problem' && !updated.grievance) updated.grievance = value;
+      if (key === 'grievance' && !updated.problem) updated.problem = value;
       return updated;
     });
   };
@@ -131,8 +137,10 @@ export const NovaProvider = ({ children }) => {
       novaState, setNovaState,
       novaEmotion, setNovaEmotion,
       conversationPhase, setConversationPhase,
-      visitorData, updateVisitorData,
+      visitorData, setVisitorData, updateVisitorData,
       visitorMood, setVisitorMood,
+      chatHistory, setChatHistory,
+      conversationId, setConversationId,
       advanceConversation,
       appMode, setAppMode
     }}>

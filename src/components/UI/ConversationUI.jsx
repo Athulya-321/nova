@@ -9,14 +9,14 @@ export default function ConversationUI() {
   const { 
     conversationPhase, advanceConversation, 
     visitorData, updateVisitorData,
-    visitorMood, setVisitorMood
+    visitorMood, setVisitorMood,
+    chatHistory, setChatHistory,
+    conversationId, setConversationId
   } = useNova();
   
   const [inputValue, setInputValue] = useState('');
-  const [chatHistory, setChatHistory] = useState([]);
   const [emailStatus, setEmailStatus] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
-  const [conversationId, setConversationId] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   
   // Local edit states for confirmation modal
@@ -30,12 +30,12 @@ export default function ConversationUI() {
 
   const chatEndRef = useRef(null);
 
-  // Initialize unique session ID
+  // Initialize unique session ID if not already generated
   useEffect(() => {
     if (!conversationId) {
       setConversationId(nanoid());
     }
-  }, [conversationId]);
+  }, [conversationId, setConversationId]);
 
   // Sync confirmation modal fields with visitorData
   useEffect(() => {
@@ -118,11 +118,13 @@ export default function ConversationUI() {
 
       const data = await response.json();
       
-      // Update Context Profile immediately (e.g. name globally)
+      // Update Context Profile immediately (e.g. name globally, location, age, email, problem)
       if (data.profileUpdates) {
         Object.entries(data.profileUpdates).forEach(([key, value]) => {
-          if (value && String(value).trim() !== '' && visitorData[key] !== value) {
+          if (value && String(value).trim() !== '') {
             updateVisitorData(key, value);
+            if (key === 'grievance') updateVisitorData('problem', value);
+            if (key === 'problem') updateVisitorData('grievance', value);
           }
         });
       }
