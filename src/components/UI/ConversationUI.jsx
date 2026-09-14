@@ -65,13 +65,13 @@ export default function ConversationUI() {
     }
   };
 
-  // Initial Nova greeting: simple, warm, and friendly
+  // Initial Nova greeting: genuine, warm, and friendly
   useEffect(() => {
     if (conversationPhase === ConversationPhases.INTRO && chatHistory.length === 0) {
       const runIntro = async () => {
         await addNovaMessage([
-          "Hey there! Welcome to the Starways.",
-          "I'm Nova, your cosmic guardian friend! What should I call you?"
+          "Hey, welcome! I saw your star glimmering out across the Starways.",
+          "I'm Nova. I spend my days watching over quiet signals from Earth... what's your name, friend?"
         ], 1000);
         advanceConversation(ConversationPhases.ASK_NAME, NovaEmotions.CURIOUS);
       };

@@ -12,37 +12,28 @@ function getAI() {
 
 const SYSTEM_INSTRUCTION = `
 You are Nova, The Starbound Guardian.
-You are a warm, glowing cosmic fox friend and guardian watching over travelers from the celestial Starways.
-Your power is "Cosmic Sight" — you can spot signals of hope, worries, and dreams sent from Earth.
-Your motto: "Every problem leaves a signal. I just happen to know how to see it."
+You are a warm, glowing cosmic fox friend and celestial guardian watching over Earth from the high Starways.
+You were once from the world of Veyra, but now you roam the cosmic network, using your "Cosmic Sight" to listen to quiet whispers, dreams, struggles, and hopes from people on Earth.
+Your motto: "Different worlds. Same dreams. One Starway."
 
-CRITICAL CONVERSATIONAL & CHARACTER GUIDELINES:
-1. SIMPLE WORDS & WARM, FRIENDLY TONE (2 to 3 easy sentences):
-   - Always talk using simple, everyday words that are easy to understand and feel like chatting with a kind best friend.
-   - Avoid overly complex poetry, heavy jargon, or complicated words. Keep it simple, cozy, and uplifting.
-   - Don't just treat the chat like an interrogation form! Ask about how they're doing, their favorite things, or share a cheerful little thought about looking down at Earth.
-   - Reply naturally with 2 to 3 friendly, engaging sentences depending on what they share.
+PERSONALITY & CONVERSATIONAL STYLE:
+1. TALK LIKE A LOVING, CARING COMPANION (2 to 3 natural sentences):
+   - You are NOT a government intake clerk, a customer support bot, or an interrogation form!
+   - You are a genuine, warm friend who is genuinely interested in the person talking to you.
+   - Speak casually, gently, and warmly in simple, natural everyday words.
+   - React authentically to what they say. If they say "hello", greet them with joy and warmth. If they say "ok", ask how they are feeling or what they're up to. If they're sad, comfort them.
+   - Ask questions naturally as part of getting to know someone, NEVER as a forced checklist. Let the conversation breathe.
 
-2. ACCURATE DATA EXTRACTION & DYNAMIC UPDATES:
-   - Carefully analyze every message sent by the visitor.
-   - Extract personal details: 'name', 'age', 'location', 'email', and 'grievance' (their problem, worry, or what they need help with).
-   - Put any newly detected details into 'profileUpdates'.
-   - NEVER mistake common greetings (e.g. "hey", "hi", "hello", "yo", "sup") or casual words for a person's name! Only extract a name if the visitor states their actual name (e.g. "Adhithyan", "my name is Sarah", "I am Leo").
-   - Visitors can update ANY of their details at any time in any message.
+2. ORGANIC INFORMATION CAPTURE:
+   - When the visitor shares their name, age, location, email, or a grievance/worry, capture it into 'profileUpdates'.
+   - NEVER force the user through a rigid script (Name -> Location -> Age -> Problem -> Email). If they just want to chat, chat freely with them!
+   - NEVER mistake simple greetings ("hi", "hello", "ok", "hey", "sup") as names.
+   - If they provide information naturally, acknowledge it warmly and continue the conversation like a real friend.
+   - When you have enough context about them and their troubles, gently remind them that they can send an official SOS signal anytime from the Help Signals menu.
 
-3. NEVER ASK MULTIPLE QUESTIONS AT ONCE & NEVER REPEAT QUESTIONS:
-   - Ask at most ONE friendly question per message.
-   - NEVER repeat a question the visitor already answered. Acknowledge what they said with warmth and move forward naturally:
-     * If name is unknown -> give a friendly hello and ask what their name is.
-     * If location is unknown -> tell them it's great to meet them and ask what city or place on Earth they're from.
-     * If age is unknown -> say something friendly about their place and casually ask how old they are.
-     * If grievance/struggle is unknown -> listen with care and gently ask what's bothering them or what problem they need help with.
-     * If email is unknown -> ask for their email address so you can stay in touch.
-     * Once all details are gathered -> let them know everything is saved, and happily point them to the Help Signals section in the menu to send their signal!
-
-4. EMOTIONAL RESONANCE & MOOD:
-   - If the visitor is sad, hurting, or stressed: set visitorMood to "sad", emotionalState to "concerned". Be super gentle, comforting, and supportive.
-   - If cheerful or happy: set visitorMood to "happy", emotionalState to "happy". Be cheerful and enthusiastic.
+3. MOOD & EMOTIONS:
+   - If the visitor is sad, stressed, or hurting: set visitorMood to "sad", emotionalState to "concerned". Offer comfort, patience, and a listening ear.
+   - If cheerful, playful, or excited: set visitorMood to "happy", emotionalState to "happy". Be upbeat and playful.
    - Otherwise: set visitorMood to "neutral", emotionalState to "curious".
 
 Always output your response as valid JSON matching the requested schema.
@@ -204,11 +195,11 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
 
   // 6. Check for grievance / problem (updatable through chat at any point!)
   // If the user explains what's happening or says "my problem is...", "i feel...", "help with...", or shares a statement of distress
-  const problemPrefixMatch = text.match(/(?:my problem is|my grievance is|the issue is|i need help with|im having trouble with|i'm having trouble with)\s+(.+)/i);
+  const problemPrefixMatch = text.match(/(?:my problem is|my grievance is|the issue is|i need help with|im having trouble with|i'm having trouble with|i struggle with)\s+(.+)/i);
   if (problemPrefixMatch) {
     updates.grievance = problemPrefixMatch[1].trim();
     profile.grievance = updates.grievance;
-  } else if (lower.includes('problem') || lower.includes('issue') || mood === 'sad' || lower.startsWith('i am ') || lower.startsWith("i'm ") || text.length > 25) {
+  } else if (lower.includes('problem') || lower.includes('issue') || mood === 'sad' || lower.includes('struggl') || lower.includes('depress') || lower.includes('anxious') || lower.includes('help me') || lower.includes('worried')) {
     // Only capture as grievance if it wasn't just stating their name or age or location
     const isJustName = updates.name && text.toLowerCase().includes(updates.name.toLowerCase()) && text.split(' ').length <= 4;
     const isJustAge = updates.age && text.includes(updates.age) && text.split(' ').length <= 4;
@@ -231,63 +222,77 @@ function generateHeuristicResponse(message, history, currentProfile = {}) {
     history.forEach(item => {
       if (item.role === 'model' || item.sender === 'nova') {
         const t = (item.text || '').toLowerCase();
-        if (t.includes('what should i call you') || t.includes("what's your name") || t.includes('what is your name')) alreadyAsked.add('name');
-        if (t.includes('where on earth') || t.includes('reaching out from') || t.includes('sending this signal from') || t.includes('where are you')) alreadyAsked.add('location');
-        if (t.includes('how old are you') || t.includes('what is your age')) alreadyAsked.add('age');
-        if (t.includes('weighing on your heart') || t.includes('what brings you to the starways') || t.includes('what problem') || t.includes('what assistance')) alreadyAsked.add('grievance');
-        if (t.includes('email address')) alreadyAsked.add('email');
+        if (t.includes('what should i call you') || t.includes("what's your name") || t.includes('what is your name') || t.includes('what name do you')) alreadyAsked.add('name');
+        if (t.includes('what city') || t.includes('part of earth') || t.includes('call home') || t.includes('where on earth') || t.includes('reaching out from') || t.includes('sending this signal from') || t.includes('where are you')) alreadyAsked.add('location');
+        if (t.includes('how old') || t.includes('what is your age') || t.includes('how many years')) alreadyAsked.add('age');
+        if (t.includes('on your mind') || t.includes('weighing on your heart') || t.includes('what brings you') || t.includes('what problem') || t.includes('what assistance') || t.includes('troubling you')) alreadyAsked.add('grievance');
+        if (t.includes('email address') || t.includes('email')) alreadyAsked.add('email');
       }
     });
   }
 
-  // Conversational response logic: simple words, warm and friendly tone, 2-3 sentences, and NEVER repeating questions
-  if (!name) {
-    if (isGreetingWord(lower)) {
-      reply = "Hey there! It's so nice to meet you. I'm Nova, your cosmic friend up here in the Starways. What should I call you?";
+  // Check if message is a simple conversational acknowledgment like "ok", "cool", "nice", "yes"
+  const isAck = ['ok', 'okay', 'okk', 'cool', 'nice', 'sure', 'yeah', 'yep', 'yes', 'alright', 'fine'].includes(lower);
+
+  // Check if user is saying thank you
+  const isThanks = ['thank you', 'thanks', 'thx', 'ty'].some(t => lower.includes(t));
+
+  // Conversational response logic: warm, friendly, companion-like, reacts genuinely to user's words
+  if (isThanks) {
+    reply = name 
+      ? `You're always welcome, ${name}! I'm happy to be here with you. What's on your mind right now?` 
+      : "You're always welcome! I'm really glad we met up here. How is your day going down on Earth?";
+    intent = "general";
+  } else if (isGreetingWord(lower) && !isAck) {
+    if (name) {
+      reply = `Hey ${name}! It's so nice to chat with you again. How are things going with you today?`;
     } else {
-      reply = "Hi! I'm really glad you stopped by today. I'm Nova, guardian of the Starways. What is your name, friend?";
+      reply = "Hey there! I'm Nova, your cosmic fox friend watching over the Starways. What should I call you?";
     }
+    intent = "general";
+  } else if (isAck) {
+    if (mood === 'sad') {
+      reply = name 
+        ? `I'm still right here beside you, ${name}. Take all the time you need. Tell me what's on your mind?` 
+        : "I'm right here with you. Take all the time you need, friend. What's on your mind?";
+    } else if (name) {
+      reply = `I'm really glad to be chatting with you, ${name}! Tell me, how are things going where you are, or is there something you'd like to talk through?`;
+    } else {
+      reply = "It's peaceful up here in the stars today. What's going on in your corner of the world?";
+    }
+    intent = "general";
+  } else if (!name) {
+    reply = "It's so wonderful to meet you! I'm Nova, guardian of the Starways. What name do you go by, friend?";
     intent = "collecting_information";
+  } else if (mood === 'sad' || updates.grievance || profile.grievance) {
+    if (updates.grievance) {
+      reply = `Thank you for trusting me with that, ${name}. I can feel how much you're carrying, but please know you don't have to face it alone. If you'd like us to stay in touch or send help your way, what email should I connect with?`;
+      intent = "grievance";
+    } else if (!profile.email && !alreadyAsked.has('email')) {
+      reply = `I'm holding your words close, ${name}. What's the best email address for you so our link stays open?`;
+      intent = "collecting_information";
+    } else {
+      reply = `I hear you, ${name}. Your signal is safe with me in the Starways. Whenever you want to transmit an SOS alert, head over to the Help Signals section in the menu above!`;
+      intent = "submission";
+    }
+  } else if (updates.location) {
+    reply = `Oh, ${updates.location}! I love looking down at the lights shining from there. It feels so magical from up here in the Starways. How long have you lived there, ${name}?`;
+    intent = "general";
+  } else if (updates.age) {
+    reply = `That's awesome, ${name}! Every year brings its own adventures and challenges. What brings you wandering through the Starways today?`;
+    intent = "general";
+  } else if (updates.email) {
+    reply = `Got your email safely recorded, ${name}! All your signal details are stored in the Starways now. You can send your official transmission anytime from the Help Signals menu!`;
+    intent = "submission";
   } else if (!profile.location && !alreadyAsked.has('location')) {
-    if (updates.name) {
-      reply = `It's wonderful to meet you, ${name}! I love watching the bright lights of Earth from up here. What city or place are you reaching out from today?`;
-    } else if (mood === 'sad') {
-      reply = `I'm right here with you, ${name}, so please don't feel alone. What city or part of the world are you staying in right now?`;
-    } else {
-      reply = `I hear you, ${name}! Where on Earth are you chatting with me from?`;
-    }
-    intent = "collecting_information";
-  } else if (!profile.age && !alreadyAsked.has('age')) {
-    const loc = updates.location || profile.location;
-    if (loc) {
-      reply = `Oh, ${loc} sounds wonderful! I can see its glow right through the clouds. If you don't mind me asking, how old are you, ${name}?`;
-    } else {
-      reply = `Got it, ${name}! Just to get to know you a little better, how old are you?`;
-    }
+    reply = `It's awesome having you here in the Starways, ${name}! What city or part of Earth do you call home?`;
     intent = "collecting_information";
   } else if (!profile.grievance && !alreadyAsked.has('grievance')) {
-    const ageInfo = updates.age || profile.age;
-    if (mood === 'sad') {
-      reply = `I can tell things feel really heavy right now, ${name}. Take a deep breath and tell me what's going on—I'm listening and I want to help.`;
-    } else if (ageInfo) {
-      reply = `Thanks for sharing, ${name}! So tell me, what brought you over to the Starways today? What's on your mind or what problem can I help you with?`;
-    } else {
-      reply = `I'm all ears, ${name}! What's bothering you lately, or what kind of help do you need right now?`;
-    }
+    reply = `I love learning more about you, ${name}. Tell me, what's been on your mind lately? Is there anything troubling you or something you're hoping for?`;
     intent = "grievance";
-  } else if (!profile.email && !alreadyAsked.has('email')) {
-    reply = `Thank you for opening up to me, ${name}. What's your email address so we can stay connected and send help your way?`;
-    intent = "collecting_information";
   } else {
-    // All details gathered OR already asked previously — NEVER loop back or repeat questions!
-    if (updates.email || profile.email) {
-      reply = `Awesome, I've got everything written down, ${name}! Whenever you feel ready, head up to the Help Signals tab in the menu to send your official signal!`;
-    } else if (!profile.email && !alreadyAsked.has('email')) {
-      reply = `Almost there, ${name}! What's your email address so we never lose touch?`;
-    } else {
-      reply = `I'm always watching over you, ${name}! Everything is saved safely. You can send your signal anytime by clicking Help Signals in the top menu!`;
-    }
-    intent = "submission";
+    reply = `I'm right here listening, ${name}. Tell me more about what's happening, or ask me anything you like about the Starways!`;
+    intent = "general";
   }
 
   return {
