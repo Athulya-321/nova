@@ -421,10 +421,10 @@ export default function HelpSignals() {
         )}
       </AnimatePresence>
 
-      {/* Shooting Star Layer */}
+      {/* Shooting Star Layer (Higher z-index than the button) */}
       <AnimatePresence>
         {isSending && (
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 70, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 120, pointerEvents: 'none' }}>
             
             <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
               {/* 1. The lingering path of the shooting star */}
@@ -480,7 +480,7 @@ export default function HelpSignals() {
                 borderRadius: '50%',
                 boxShadow: '0 0 20px 10px #fff, 0 0 40px 20px #7DE2FF',
                 transform: 'translate(-50%, -50%)',
-                zIndex: 71
+                zIndex: 121
               }}
             />
 
