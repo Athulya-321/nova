@@ -27,6 +27,8 @@ export const NovaEmotions = {
   THOUGHTFUL: 'THOUGHTFUL',
   SERIOUS: 'SERIOUS',
   CONCERNED: 'CONCERNED',
+  SAD: 'SAD',
+  DULL: 'DULL',
   POWER_ACTIVATION: 'POWER_ACTIVATION',
   IDLE: 'IDLE'
 };
@@ -69,6 +71,7 @@ export const NovaProvider = ({ children }) => {
   const [novaEmotion, setNovaEmotion] = useState(NovaEmotions.CURIOUS);
   const [conversationPhase, setConversationPhase] = useState(ConversationPhases.NONE);
   const [appMode, setAppMode] = useState(AppModes.HOME);
+  const [visitorMood, setVisitorMood] = useState('neutral'); // 'sad', 'dull', 'happy', 'neutral'
   
   const [visitorData, setVisitorData] = useState({
     name: '',
@@ -79,7 +82,10 @@ export const NovaProvider = ({ children }) => {
   });
 
   const updateVisitorData = (key, value) => {
-    setVisitorData(prev => ({ ...prev, [key]: value }));
+    setVisitorData(prev => {
+      const updated = { ...prev, [key]: value };
+      return updated;
+    });
   };
 
   const advanceConversation = (nextPhase, newEmotion = null, newState = null) => {
@@ -126,6 +132,7 @@ export const NovaProvider = ({ children }) => {
       novaEmotion, setNovaEmotion,
       conversationPhase, setConversationPhase,
       visitorData, updateVisitorData,
+      visitorMood, setVisitorMood,
       advanceConversation,
       appMode, setAppMode
     }}>

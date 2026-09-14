@@ -3,7 +3,7 @@ import { useNova, AppModes, NovaStates } from '../../context/NovaContext';
 import '../../styles/inspired.css';
 
 export default function InspiredHome() {
-  const { appMode, novaState } = useNova();
+  const { appMode, novaState, visitorMood } = useNova();
   
   if (appMode !== AppModes.HOME) return null;
   
@@ -20,16 +20,57 @@ export default function InspiredHome() {
 
   if (isOpening) return null;
 
+  // Atmosphere dynamic tinting based on mood
+  const getAtmosphereGradient = () => {
+    if (visitorMood === 'sad') {
+      // Subdued, cool, melancholic deep indigo/gray
+      return 'radial-gradient(circle at 30% 50%, rgba(18, 20, 35, 0.6) 0%, rgba(5, 6, 12, 0.95) 70%), linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(5,5,10,0.95) 100%)';
+    }
+    if (visitorMood === 'happy') {
+      // Bright, vibrant, cosmic violet/cyan & gold glow
+      return 'radial-gradient(circle at 30% 50%, rgba(70, 50, 130, 0.5) 0%, rgba(10, 8, 30, 0.7) 60%), radial-gradient(circle at 70% 30%, rgba(125, 226, 255, 0.2) 0%, transparent 60%)';
+    }
+    // Neutral default
+    return 'radial-gradient(circle at 30% 50%, rgba(32, 45, 80, 0.4) 0%, transparent 60%), linear-gradient(135deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%)';
+  };
+
+  const isDull = visitorMood === 'sad';
+  const isHappy = visitorMood === 'happy';
+
   return (
-    <div className="inspired-home-container">
+    <div 
+      className="inspired-home-container"
+      style={{
+        transition: 'all 1.5s ease',
+        filter: isDull ? 'saturate(0.65) brightness(0.85)' : isHappy ? 'saturate(1.25) brightness(1.05)' : 'none'
+      }}
+    >
       
       {/* Atmosphere Background */}
-      <div className="inspired-atmosphere" />
+      <div 
+        className="inspired-atmosphere" 
+        style={{
+          background: getAtmosphereGradient(),
+          transition: 'background 2s ease'
+        }}
+      />
       
       {/* Classy Cosmic Elements */}
       <div className="classy-cosmic-bg">
-        <div className="hero-beam" />
-        <div className="starfield-overlay" />
+        <div 
+          className="hero-beam" 
+          style={{
+            opacity: isDull ? 0.01 : isHappy ? 0.06 : 0.02,
+            transition: 'opacity 1.5s ease'
+          }}
+        />
+        <div 
+          className="starfield-overlay" 
+          style={{
+            opacity: isDull ? 0.1 : isHappy ? 0.35 : 0.2,
+            transition: 'opacity 1.5s ease'
+          }}
+        />
       </div>
 
       {/* Left Content Area: Nova Cutout & Writing */}

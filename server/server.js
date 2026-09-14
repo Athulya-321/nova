@@ -53,6 +53,7 @@ app.post('/api/chat', async (req, res) => {
       reply: geminiResponse.reply,
       profileUpdates: session.profile,
       emotionalState: geminiResponse.emotionalState || 'neutral',
+      visitorMood: geminiResponse.visitorMood || 'neutral',
       conversationIntent: geminiResponse.conversationIntent || 'general',
       needsFollowUp: geminiResponse.needsFollowUp || false
     });

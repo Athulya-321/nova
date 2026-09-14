@@ -192,17 +192,23 @@ function buildSuperheroEmailTemplate({ name, age, location, email, grievance, fo
         <div class="grievance-text">${grievance || 'No details provided.'}</div>
       </div>
 
-      <div class="card" style="padding: 14px 20px;">
-        <div class="data-row">
-          <span class="data-label">Transmission Timestamp</span>
-          <span class="data-value" style="font-size: 12px; color: #94a3b8;">${formattedDate} at ${formattedTime} (${timeZone})</span>
+      <div class="card" style="border-left: 3px solid #7de2ff; background: rgba(125, 226, 255, 0.05); padding: 16px 20px;">
+        <div style="font-size: 13px; line-height: 1.6; color: #cbd5e1;">
+          ✦ <strong>Nova's Starway Note:</strong> <em>"No star in the cosmos is ever truly alone. A reply to this transmission will connect directly back to the traveler's contact beacon at <a href="mailto:${email}" style="color: #7de2ff;">${email || 'their email'}</a>."</em>
         </div>
       </div>
     </div>
 
     <div class="footer">
-      NOVA • The Starbound Guardian • Astral Realm / Veyra<br>
-      Automated Starway Telemetry • Dispatching to: nova0hero@gmail.com
+      <div style="font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px; letter-spacing: 1px;">
+        NOVA — THE STARBOUND GUARDIAN
+      </div>
+      <div style="color: #94a3b8; font-size: 11px; margin-bottom: 8px;">
+        Astral Realm • Veyra • Starways Telemetry Network
+      </div>
+      <div style="color: #64748b; font-size: 10px;">
+        Delivered directly to: <strong>nova0hero@gmail.com</strong> • Automated Emergency Dispatch
+      </div>
     </div>
   </div>
 </body>
