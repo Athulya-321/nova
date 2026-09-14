@@ -115,8 +115,8 @@ export default function HelpSignals() {
         }}
       />
 
-      {/* Button Container (z-index higher than animation layers) */}
-      <div style={{ position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 85 }}>
+      {/* Button Container (positioned lower down so DETECT title and subtitle remain fully visible) */}
+      <div style={{ position: 'absolute', top: '76%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 85 }}>
         <motion.button
           onClick={handleOpenPopup}
           animate={{
@@ -431,7 +431,7 @@ export default function HelpSignals() {
             <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
               {/* 1. The lingering path of the shooting star */}
               <motion.line
-                x1="42%" y1="71%" x2="100%" y2="-10%"
+                x1="50%" y1="76%" x2="100%" y2="-10%"
                 stroke="rgba(125, 226, 255, 0.5)"
                 strokeWidth="2"
                 strokeDasharray="4 6"
@@ -442,7 +442,7 @@ export default function HelpSignals() {
               
               {/* 2. The Shooting Star Tail (Solid bright gradient line) */}
               <motion.line
-                x1="42%" y1="71%" x2="100%" y2="-10%"
+                x1="50%" y1="76%" x2="100%" y2="-10%"
                 stroke="url(#shootingStarGrad)"
                 strokeWidth="6"
                 strokeLinecap="round"
@@ -467,7 +467,7 @@ export default function HelpSignals() {
 
             {/* 3. The Bright Head of the Shooting Star */}
             <motion.div
-              initial={{ top: '71%', left: '42%', opacity: 0, scale: 0 }}
+              initial={{ top: '76%', left: '50%', opacity: 0, scale: 0 }}
               animate={{ 
                 top: '-10%', 
                 left: '100%', 

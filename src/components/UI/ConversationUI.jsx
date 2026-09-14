@@ -46,14 +46,14 @@ export default function ConversationUI() {
     }
   };
 
-  // Initial Nova greeting: simple, warm "Hi" and nice wording asking for their name 1st
+  // Initial Nova greeting: rich, warm, and cosmic
   useEffect(() => {
     if (conversationPhase === ConversationPhases.INTRO && chatHistory.length === 0) {
       const runIntro = async () => {
         await addNovaMessage([
-          "Hi! Welcome to the Starways.",
-          "I'm Nova, watching across the cosmic beacon... what's your name, traveler?"
-        ], 1000);
+          "Greetings, celestial traveler! The constellation lanterns flicker as your presence ripples through the Starways.",
+          "I'm Nova, guardian of the cosmic beacons. What name do you carry in the realms below?"
+        ], 1200);
         advanceConversation(ConversationPhases.ASK_NAME, NovaEmotions.CURIOUS);
       };
       runIntro();
