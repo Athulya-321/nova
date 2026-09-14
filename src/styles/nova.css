@@ -1,0 +1,127 @@
+/* Advanced Nova Character Animations */
+
+.nova-container {
+  position: absolute;
+  left: 50%;
+  bottom: 10%;
+  transform: translateX(-50%);
+  z-index: var(--z-nova);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  /* Will-change for performance */
+  will-change: transform, filter, opacity;
+}
+
+/* Distant State */
+.nova-far-away, .nova-notices {
+  transform: translateX(-50%) scale(0.05) translateY(-500px);
+  filter: brightness(0.2) blur(3px) drop-shadow(0 0 50px rgba(0, 191, 255, 0.2));
+  opacity: 0.6;
+}
+
+.nova-notices {
+  filter: brightness(0.5) blur(2px) drop-shadow(0 0 100px rgba(0, 191, 255, 0.6));
+  opacity: 0.9;
+  transition: all 1s ease-in-out;
+}
+
+/* Advanced 2.5D Run Cycle */
+.nova-approaching {
+  animation: physicalRun 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes physicalRun {
+  0% {
+    transform: translateX(-50%) scale(0.05) translateY(-500px);
+    filter: brightness(0.5) blur(2px);
+  }
+  25% {
+    transform: translateX(-50%) scale(0.2) translateY(-200px) rotate(-2deg);
+    filter: brightness(0.7) blur(1px);
+  }
+  50% {
+    transform: translateX(-50%) scale(0.5) translateY(-50px) rotate(2deg);
+    filter: brightness(0.9) blur(0px);
+  }
+  75% {
+    transform: translateX(-50%) scale(0.8) translateY(-10px) rotate(-1deg);
+  }
+  100% {
+    transform: translateX(-50%) scale(1) translateY(0) rotate(0deg);
+    filter: brightness(1) blur(0);
+  }
+}
+
+/* Close State */
+.nova-close {
+  transform: translateX(-50%) scale(1) translateY(0);
+  filter: brightness(1) blur(0);
+}
+
+/* Idle Animations - Compound for realism */
+.nova-idle {
+  animation: breatheTranslate 4s infinite ease-in-out;
+}
+
+.nova-idle .nova-sprite {
+  animation: breatheScale 4s infinite ease-in-out;
+}
+
+@keyframes breatheTranslate {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-10px); }
+}
+
+@keyframes breatheScale {
+  0%, 100% { transform: scaleY(1) scaleX(1); }
+  50% { transform: scaleY(1.02) scaleX(0.98); } /* Squash & stretch */
+}
+
+/* Character Sprite Masking */
+.nova-sprite {
+  height: 60vh;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  /* Strong mask to remove the hard rectangle edge of the AI generated image */
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, black 40%, transparent 70%);
+  mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, black 40%, transparent 70%);
+  transform-origin: bottom center;
+}
+
+/* The Core Symbol overlay */
+.nova-core-symbol {
+  position: absolute;
+  top: 15%; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 15px;
+  height: 15px;
+  background: var(--nova-core);
+  border-radius: 50%;
+  box-shadow: 0 0 20px 5px var(--nova-glow);
+  transition: all 0.5s ease;
+  z-index: 2;
+}
+
+/* Emotional States */
+.emotion-serious .nova-core-symbol,
+.emotion-concerned .nova-core-symbol {
+  background: var(--portal-core);
+  box-shadow: 0 0 40px 15px var(--portal-glow);
+  animation: pulseCoreFast 1s infinite alternate;
+}
+
+.emotion-happy .nova-sprite {
+  filter: drop-shadow(0 0 30px rgba(255, 213, 79, 0.4));
+}
+
+.emotion-power_activation .nova-core-symbol {
+  background: #fff;
+  box-shadow: 0 0 80px 30px var(--nova-glow), 0 0 150px 50px var(--portal-core);
+}
+
+@keyframes pulseCoreFast {
+  from { box-shadow: 0 0 20px 10px var(--portal-glow); }
+  to { box-shadow: 0 0 50px 20px var(--portal-glow); }
+}

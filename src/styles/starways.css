@@ -1,0 +1,490 @@
+/* Starways Environment Styles */
+
+.starways-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #0B0B1A 0%, #030308 100%);
+  transition: filter 2s ease;
+  z-index: var(--z-background);
+  overflow: hidden;
+}
+
+.darkened {
+  filter: brightness(0.3) contrast(1.2);
+}
+
+.starways-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+}
+
+.parallax-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 120%;
+  height: 120%;
+  transform: translate(-10%, -10%);
+  pointer-events: none;
+}
+
+/* Pure CSS Stars using Box Shadow */
+.layer-stars {
+  z-index: calc(var(--z-background) + 1);
+  background: transparent;
+  animation: driftSlow 150s linear infinite;
+}
+
+.layer-stars::before, .layer-stars::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: transparent;
+  border-radius: 50%;
+  /* Generated a few box-shadow stars manually */
+  box-shadow: 
+    10vw 10vh #fff, 20vw 80vh #fff, 80vw 20vh #fff, 90vw 90vh #fff,
+    30vw 40vh rgba(255,255,255,0.5), 70vw 60vh rgba(255,255,255,0.8),
+    50vw 15vh #fff, 15vw 50vh #fff, 85vw 50vh #fff, 50vw 85vh rgba(255,255,255,0.6),
+    40vw 30vh #fff, 60vw 70vh rgba(255,255,255,0.7),
+    25vw 25vh #fff, 75vw 75vh #fff, 25vw 75vh rgba(255,255,255,0.4), 75vw 25vh #fff;
+}
+
+.layer-stars::after {
+  width: 1px;
+  height: 1px;
+  box-shadow: 
+    5vw 5vh #fff, 95vw 95vh #fff, 5vw 95vh #fff, 95vw 5vh #fff,
+    45vw 45vh rgba(255,255,255,0.8), 55vw 55vh #fff,
+    35vw 85vh rgba(255,255,255,0.5), 85vw 35vh #fff,
+    10vw 50vh #fff, 50vw 10vh rgba(255,255,255,0.6),
+    12vw 80vh #fff, 88vw 12vh #fff, 70vw 10vh #fff, 10vw 70vh rgba(255,255,255,0.7);
+}
+
+.layer-nebula {
+  z-index: calc(var(--z-background) + 2);
+  background: 
+    radial-gradient(ellipse at 20% 30%, rgba(179, 136, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(58, 134, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 0, 255, 0.05) 0%, transparent 60%);
+  mix-blend-mode: screen;
+  animation: driftMedium 80s linear infinite alternate;
+}
+
+.layer-structures {
+  z-index: calc(var(--z-midground) - 1);
+  background: radial-gradient(circle at 50% 90%, rgba(0, 245, 212, 0.05) 0%, transparent 60%);
+  mix-blend-mode: overlay;
+  animation: floatStructures 10s ease-in-out infinite alternate;
+}
+
+@keyframes driftSlow {
+  from { transform: translate(-10%, -10%) rotate(0deg); }
+  to { transform: translate(-10%, -10%) rotate(5deg); }
+}
+
+@keyframes driftMedium {
+  from { transform: translate(-10%, -10%) scale(1); }
+  to { transform: translate(-15%, -5%) scale(1.05); }
+}
+
+@keyframes floatStructures {
+  0% { transform: translate(-10%, -10%) translateY(0); }
+  100% { transform: translate(-10%, -10%) translateY(15px); }
+}
+
+/* Cosmic Network Container */
+.cosmic-network-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: var(--font-primary);
+}
+
+.network-svg-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.network-nodes-layer {
+  position: relative;
+  width: 100%; height: 100%;
+  max-width: 1200px;
+  z-index: 2;
+  /* Centered context for absolute positioning */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Nodes */
+.cosmic-node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.node-visual {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.node-core {
+  width: 80px; height: 80px;
+  background: radial-gradient(circle, #fff, var(--nova-core) 40%, transparent 80%);
+  box-shadow: 0 0 50px var(--nova-glow);
+  animation: corePulse 4s ease-in-out infinite;
+}
+
+.node-planet {
+  width: 50px; height: 50px;
+  background: radial-gradient(circle at 30% 30%, #fff, #3a86ff 60%, #000);
+  box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5), 0 0 20px rgba(58, 134, 255, 0.4);
+}
+
+.node-portal {
+  width: 60px; height: 60px;
+  background: transparent;
+  border: 4px solid rgba(179, 136, 255, 0.8);
+  box-shadow: 0 0 30px rgba(179, 136, 255, 0.5), inset 0 0 20px rgba(179, 136, 255, 0.5);
+  animation: portalSpin 10s linear infinite;
+}
+
+.node-crystal {
+  width: 40px; height: 60px;
+  background: linear-gradient(135deg, #00f5d4, #00bbf9);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  box-shadow: 0 0 20px #00f5d4;
+}
+
+.node-vortex {
+  width: 60px; height: 60px;
+  background: radial-gradient(circle, #000, #3c096c);
+  box-shadow: 0 0 40px #7b2cbf;
+  animation: vortexSpin 4s linear infinite reverse;
+}
+
+.node-horizon {
+  width: 50px; height: 50px;
+  background: radial-gradient(circle at 70% 30%, #fee440, #f15bb5);
+  box-shadow: 0 0 30px #fee440;
+}
+
+/* Glow ring on hover/active */
+.node-ring {
+  position: absolute;
+  top: -15px; left: -15px; right: -15px; bottom: -15px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.5s ease;
+  transform: scale(0.8);
+}
+
+.cosmic-node:hover .node-ring, .cosmic-node.active .node-ring {
+  opacity: 1;
+  transform: scale(1);
+  animation: rotateRing 8s linear infinite;
+}
+
+/* Animations */
+@keyframes corePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 40px var(--nova-glow); }
+  50% { transform: scale(1.1); box-shadow: 0 0 80px var(--nova-glow); }
+}
+
+@keyframes portalSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes vortexSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(0.9); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes rotateRing {
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+/* Holographic Label */
+.holo-label {
+  position: absolute;
+  top: 50%; left: 100%;
+  transform: translateY(-50%);
+  margin-left: 30px;
+  padding: 10px 15px;
+  background: rgba(10, 15, 30, 0.7);
+  border-left: 2px solid var(--nova-core);
+  backdrop-filter: blur(10px);
+  color: white;
+  width: 200px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease, margin-left 0.3s ease;
+  z-index: 10;
+}
+
+.cosmic-node:hover .holo-label, .cosmic-node.active .holo-label {
+  opacity: 1;
+  margin-left: 20px;
+}
+
+.holo-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+  color: var(--nova-core);
+  text-transform: uppercase;
+}
+
+.holo-tag {
+  font-size: 0.7rem;
+  color: #00f5d4;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.holo-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Title & HUD */
+.starways-header {
+  position: absolute;
+  top: 40px;
+  left: 0; width: 100%;
+  text-align: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.starways-title {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  letter-spacing: 6px;
+  color: #fff;
+  margin: 0 0 10px 0;
+  text-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+
+.starways-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  font-style: italic;
+}
+
+.starway-activity-hud {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 15px;
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+  z-index: 100;
+  min-width: 200px;
+}
+
+.hud-title {
+  font-size: 0.7rem;
+  color: var(--nova-core);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 5px;
+}
+
+.hud-log {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-log::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--nova-core);
+  border-radius: 50%;
+  box-shadow: 0 0 5px var(--nova-core);
+}
+
+/* Nova Overlay */
+.nova-observer-container {
+  position: absolute;
+  bottom: 0px;
+  left: 40px;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  pointer-events: none; /* Let clicks pass through to background if needed */
+}
+
+.nova-speech-bubble {
+  background: rgba(10, 15, 30, 0.85);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 15px 25px;
+  border-radius: 20px 20px 20px 0;
+  color: #fff;
+  font-size: 0.95rem;
+  margin-bottom: 150px;
+  margin-left: -20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  max-width: 250px;
+  position: relative;
+}
+
+/* Action Control */
+.action-control-container {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+.follow-starway-btn {
+  background: rgba(10, 15, 30, 0.7);
+  border: 1px solid var(--nova-core);
+  color: #fff;
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.follow-starway-btn::before {
+  content: '';
+  display: inline-block;
+  width: 10px; height: 10px;
+  background: var(--nova-core);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--nova-glow);
+}
+
+.follow-starway-btn:hover {
+  background: rgba(255,255,255,0.1);
+  box-shadow: 0 0 20px rgba(179, 136, 255, 0.4);
+}
+
+.follow-starway-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Help Signals (Distant Points) */
+.help-signal {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8);
+  animation: twinkle random(5s) infinite alternate;
+}
+
+@keyframes twinkle {
+  0% { opacity: 0.2; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.2); }
+}
+
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+  .holo-label {
+    top: 100%; left: 50%;
+    transform: translateX(-50%);
+    margin-left: 0;
+    margin-top: 15px;
+    border-left: none;
+    border-top: 2px solid var(--nova-core);
+    text-align: center;
+  }
+  .cosmic-node:hover .holo-label, .cosmic-node.active .holo-label {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .starway-activity-hud { display: none; }
+  .nova-observer-container { display: none; }
+  
+  .network-nodes-layer {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 120px;
+    padding-bottom: 120px;
+    overflow-y: auto;
+  }
+  
+  .cosmic-node {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    margin-bottom: 80px;
+  }
+  
+  .network-svg-layer {
+    display: none; /* Hide complex SVG on mobile for a simple vertical line */
+  }
+  
+  /* Mobile vertical line */
+  .network-nodes-layer::before {
+    content: '';
+    position: absolute;
+    top: 120px;
+    bottom: 120px;
+    left: 50%;
+    width: 2px;
+    background: rgba(179, 136, 255, 0.2);
+    z-index: 1;
+  }
+}
