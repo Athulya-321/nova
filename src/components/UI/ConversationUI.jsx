@@ -69,9 +69,6 @@ export default function ConversationUI() {
     const val = inputValue.trim();
     addUserMessage(val);
     setInputValue('');
-    setErrorMsg('');
-
-    if (conversationPhase === ConversationPhases.CONFIRMATION) return;
 
     setIsTyping(true);
     
