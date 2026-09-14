@@ -19,7 +19,16 @@ export default function HelpSignals() {
     grievance: visitorData.problem || visitorData.grievance || ''
   });
 
+  const sendIconRef = React.useRef(null);
+  const [iconOrigin, setIconOrigin] = useState({ x: 'calc(50% - 134px)', y: '76%' });
+
   const handleOpenPopup = () => {
+    if (sendIconRef.current) {
+      const rect = sendIconRef.current.getBoundingClientRect();
+      const x = `${rect.left + rect.width / 2}px`;
+      const y = `${rect.top + rect.height / 2}px`;
+      setIconOrigin({ x, y });
+    }
     // Re-sync with latest visitorData in case user chatted first
     setFormData({
       name: visitorData.name || formData.name || '',
@@ -60,6 +69,15 @@ export default function HelpSignals() {
       setIsError(true);
       setStatusMessage(`Please provide your ${missing.join(', ')} before transmitting.`);
       return;
+    }
+
+    // Calculate exact send icon position so animation launches precisely from the button's send icon
+    if (sendIconRef.current) {
+      const rect = sendIconRef.current.getBoundingClientRect();
+      setIconOrigin({
+        x: `${rect.left + rect.width / 2}px`,
+        y: `${rect.top + rect.height / 2}px`
+      });
     }
 
     // Begin signal transmission animation
@@ -151,6 +169,7 @@ export default function HelpSignals() {
           whileTap={!isSending ? { scale: 0.98 } : {}}
         >
           <motion.div
+            ref={sendIconRef}
             animate={isSending ? { x: [0, 5, 0] } : { x: 0 }}
             transition={{ duration: 0.2 }}
           >
@@ -431,7 +450,7 @@ export default function HelpSignals() {
             <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
               {/* 1. The lingering path of the shooting star */}
               <motion.line
-                x1="50%" y1="76%" x2="100%" y2="-10%"
+                x1={iconOrigin.x} y1={iconOrigin.y} x2="100%" y2="-10%"
                 stroke="rgba(125, 226, 255, 0.5)"
                 strokeWidth="2"
                 strokeDasharray="4 6"
@@ -442,7 +461,7 @@ export default function HelpSignals() {
               
               {/* 2. The Shooting Star Tail (Solid bright gradient line) */}
               <motion.line
-                x1="50%" y1="76%" x2="100%" y2="-10%"
+                x1={iconOrigin.x} y1={iconOrigin.y} x2="100%" y2="-10%"
                 stroke="url(#shootingStarGrad)"
                 strokeWidth="6"
                 strokeLinecap="round"
@@ -467,7 +486,7 @@ export default function HelpSignals() {
 
             {/* 3. The Bright Head of the Shooting Star */}
             <motion.div
-              initial={{ top: '76%', left: '50%', opacity: 0, scale: 0 }}
+              initial={{ top: iconOrigin.y, left: iconOrigin.x, opacity: 0, scale: 0 }}
               animate={{ 
                 top: '-10%', 
                 left: '100%', 
