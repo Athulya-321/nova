@@ -72,51 +72,60 @@ export default function VisitorStar() {
                 width: '180px',
                 height: '60px',
                 borderRadius: '50%',
-                border: isSad ? '2px solid rgba(140, 160, 200, 0.3)' : '2px solid rgba(255, 213, 79, 0.4)',
+                border: isSad ? '2px solid rgba(125, 226, 255, 0.25)' : '2px solid rgba(125, 226, 255, 0.5)',
                 boxShadow: isSad 
-                  ? '0 0 10px rgba(140, 160, 200, 0.3)' 
-                  : '0 0 15px rgba(255, 213, 79, 0.5), inset 0 0 10px rgba(255, 213, 79, 0.3)',
+                  ? '0 0 10px rgba(125, 226, 255, 0.2)' 
+                  : '0 0 20px rgba(125, 226, 255, 0.6), inset 0 0 10px rgba(170, 59, 255, 0.3)',
                 transform: 'rotate(-15deg)',
               }}
             >
               {/* Little orbiting star/dot */}
-              <div style={{ position: 'absolute', top: '-4px', left: '20px', width: '8px', height: '8px', background: isSad ? '#a0aec0' : '#fff', borderRadius: '50%', boxShadow: isSad ? '0 0 6px #a0aec0' : '0 0 10px #fff' }} />
+              <div style={{ position: 'absolute', top: '-4px', left: '20px', width: '8px', height: '8px', background: '#fff', borderRadius: '50%', boxShadow: '0 0 10px #7DE2FF, 0 0 20px #fff' }} />
             </motion.div>
 
             {/* Glowing Center Star */}
             <motion.div
-              animate={style.pulse ? { scale: isSad ? [1, 1.05, 1] : [1, 1.2, 1], opacity: isSad ? [0.65, 0.85, 0.65] : [0.8, 1, 0.8] } : { scale: 1 }}
+              animate={style.pulse ? { scale: isSad ? [1, 1.05, 1] : [1, 1.2, 1], opacity: isSad ? [0.7, 0.85, 0.7] : [0.85, 1, 0.85] } : { scale: 1 }}
               transition={style.pulse ? { duration: isSad ? 4.5 : 3, repeat: Infinity, ease: 'easeInOut' } : {}}
               style={{ 
                 position: 'relative', 
                 zIndex: 2, 
-                filter: isSad ? 'drop-shadow(0 0 10px rgba(100, 140, 200, 0.5))' : 'drop-shadow(0 0 15px rgba(255, 213, 79, 0.8))' 
+                filter: isSad 
+                  ? 'drop-shadow(0 0 12px rgba(100, 160, 240, 0.6))' 
+                  : 'drop-shadow(0 0 18px rgba(125, 226, 255, 0.9)) drop-shadow(0 0 35px rgba(36, 92, 241, 0.5))' 
               }}
             >
               <svg width="100" height="100" viewBox="0 0 100 100">
                 <defs>
                   <radialGradient id="starGlowVisitor" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor={isSad ? "#dbeafe" : "#FFF2CC"} />
-                    <stop offset="70%" stopColor={isSad ? "#93c5fd" : "#FFD54F"} />
-                    <stop offset="100%" stopColor={isSad ? "#60a5fa" : "#FFA000"} />
+                    <stop offset="0%" stopColor="#FFFFFF" />
+                    <stop offset="35%" stopColor={isSad ? "#dbeafe" : "#E0F7FF"} />
+                    <stop offset="75%" stopColor={isSad ? "#60a5fa" : "#7DE2FF"} />
+                    <stop offset="100%" stopColor={isSad ? "#2563eb" : "#245CF1"} />
                   </radialGradient>
                 </defs>
-                <path d="M50 5 L61 35 L95 35 L67 55 L78 85 L50 65 L22 85 L33 55 L5 35 L39 35 Z" fill="url(#starGlowVisitor)" stroke={isSad ? "#93c5fd" : "#FFC107"} strokeWidth="2" strokeLinejoin="round" />
+                <path 
+                  d="M50 5 L61 35 L95 35 L67 55 L78 85 L50 65 L22 85 L33 55 L5 35 L39 35 Z" 
+                  fill="url(#starGlowVisitor)" 
+                  stroke={isSad ? "#93c5fd" : "#B3E5FC"} 
+                  strokeWidth="2.5" 
+                  strokeLinejoin="round" 
+                />
                 {/* Eyes */}
-                <ellipse cx="40" cy="50" rx="4" ry={isSad ? "3" : "6"} fill="#000" />
-                <ellipse cx="60" cy="50" rx="4" ry={isSad ? "3" : "6"} fill="#000" />
+                <ellipse cx="40" cy="50" rx="4" ry={isSad ? "3" : "6"} fill="#060515" />
+                <ellipse cx="60" cy="50" rx="4" ry={isSad ? "3" : "6"} fill="#060515" />
                 {/* Eye highlights */}
                 <circle cx="39" cy="48" r="1.5" fill="#fff" />
                 <circle cx="59" cy="48" r="1.5" fill="#fff" />
                 {/* Smile / Gentle mouth */}
                 {isSad ? (
-                  <path d="M 45 64 Q 50 59 55 64" fill="transparent" stroke="#000" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M 45 64 Q 50 59 55 64" fill="transparent" stroke="#060515" strokeWidth="2.5" strokeLinecap="round" />
                 ) : (
-                  <path d="M 45 60 Q 50 65 55 60" fill="transparent" stroke="#000" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M 45 60 Q 50 66 55 60" fill="transparent" stroke="#060515" strokeWidth="2.5" strokeLinecap="round" />
                 )}
-                {/* Blush */}
-                <ellipse cx="32" cy="56" rx="4" ry="2" fill={isSad ? "rgba(100, 150, 255, 0.3)" : "rgba(255, 100, 100, 0.6)"} />
-                <ellipse cx="68" cy="56" rx="4" ry="2" fill={isSad ? "rgba(100, 150, 255, 0.3)" : "rgba(255, 100, 100, 0.6)"} />
+                {/* Cute Cosmic Blush */}
+                <ellipse cx="32" cy="56" rx="4.5" ry="2.5" fill={isSad ? "rgba(96, 165, 250, 0.4)" : "rgba(125, 226, 255, 0.6)"} />
+                <ellipse cx="68" cy="56" rx="4.5" ry="2.5" fill={isSad ? "rgba(96, 165, 250, 0.4)" : "rgba(125, 226, 255, 0.6)"} />
               </svg>
             </motion.div>
           </div>
