@@ -68,8 +68,16 @@ app.post('/api/submit-grievance', async (req, res) => {
   try {
     const { conversationId } = req.body;
     
-    if (!conversationId || !sessions.has(conversationId)) {
-      return res.status(400).json({ success: false, message: 'Invalid or missing conversation session.' });
+    if (!conversationId) {
+      return res.status(400).json({ success: false, message: 'Invalid or missing conversation session ID.' });
+    }
+
+    // Initialize session if missing (e.g. direct transmission from Help Signals modal)
+    if (!sessions.has(conversationId)) {
+      sessions.set(conversationId, {
+        profile: {},
+        history: []
+      });
     }
 
     const session = sessions.get(conversationId);
@@ -81,7 +89,7 @@ app.post('/api/submit-grievance', async (req, res) => {
     // Merge any explicit fields passed in req.body into session profile
     const profile = session.profile || {};
     ['name', 'age', 'location', 'email', 'grievance'].forEach(field => {
-      if (req.body[field] && !profile[field]) {
+      if (req.body[field]) {
         profile[field] = req.body[field];
       }
     });
