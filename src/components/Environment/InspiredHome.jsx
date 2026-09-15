@@ -46,17 +46,37 @@ export default function InspiredHome() {
       }}
     >
       
-      {/* Atmosphere Background */}
+      {/* High Quality Cosmic Starways Background */}
+      <div 
+        className="inspired-bg-image"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundImage: 'url(/home_earth_bg_uhd.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          filter: isDull ? 'brightness(0.7) contrast(1.1) saturate(0.8)' : isHappy ? 'brightness(1.1) contrast(1.1) saturate(1.2)' : 'none',
+          transition: 'filter 1.5s ease',
+          zIndex: 1
+        }}
+      />
+      
+      {/* Atmosphere Background overlay for depth & mood */}
       <div 
         className="inspired-atmosphere" 
         style={{
           background: getAtmosphereGradient(),
-          transition: 'background 2s ease'
+          transition: 'background 2s ease',
+          zIndex: 2,
+          mixBlendMode: 'soft-light'
         }}
       />
       
       {/* Classy Cosmic Elements */}
-      <div className="classy-cosmic-bg">
+      <div className="classy-cosmic-bg" style={{ zIndex: 3 }}>
         <div 
           className="hero-beam" 
           style={{

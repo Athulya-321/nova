@@ -25,3 +25,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Downloads and temp files
+Downloads/
+pics/
+public/home_cosmic_bg.*
+public/home_earth_bg.webp

@@ -14,8 +14,8 @@
   --nova-white: #FFFFFF;
   --nova-accent: #B388FF;
 
-  --visitor-star: #FFFFFF;
-  --visitor-star-glow: rgba(125, 226, 255, 0.8);
+  --visitor-star: #FFE58F;
+  --visitor-star-glow: rgba(255, 200, 70, 0.8);
   
   --text-primary: rgba(255, 255, 255, 0.95);
   --text-secondary: rgba(255, 255, 255, 0.7);

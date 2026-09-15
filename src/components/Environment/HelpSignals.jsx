@@ -124,11 +124,14 @@ export default function HelpSignals() {
         transition={{ duration: 0.4, ease: "easeInOut" }}
         style={{
           position: 'absolute', width: '100%', height: '100%', zIndex: 1,
-          backgroundImage: 'url("/helpsignal.png")',
+          backgroundImage: 'url("/detect.png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
-          imageRendering: '-webkit-optimize-contrast',
+          imageRendering: 'high-quality',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
+          transform: 'translateZ(0)',
           transformOrigin: 'center'
         }}
       />

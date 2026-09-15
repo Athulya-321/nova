@@ -22,6 +22,10 @@ export default function CosmicMap() {
       anchors.push({ id: 'visitor', label: `${visitorData.name.toUpperCase()}'S SIGNAL`, x: 30, y: 75, size: 5, color: '#fff', desc: `Transmitting from ${visitorData.location}.` });
     }
 
+    if (typeof window !== 'undefined' && sessionStorage.getItem('meteorMissionCompleted')) {
+      anchors.push({ id: 'traveler_star', label: "THE TRAVELER'S STAR", x: 62, y: 42, size: 6, color: '#7DE2FF', desc: "Awakened when you protected Earth together with Nova." });
+    }
+
     const numStars = 60;
     const generatedStars = [];
 

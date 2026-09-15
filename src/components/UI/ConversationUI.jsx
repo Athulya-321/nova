@@ -207,10 +207,10 @@ export default function ConversationUI() {
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 20, pointerEvents: 'none' }}>
       
-      {/* Chat History Container */}
+      {/* Chat History Container - Center-Left column clearly separated from the star on the right */}
       <div style={{ 
-        position: 'absolute', top: '150px', left: '45%', width: '40%', bottom: '150px',
-        overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', paddingRight: '15px', pointerEvents: 'auto'
+        position: 'absolute', top: '130px', left: '33%', width: '42%', maxWidth: '600px', bottom: '150px',
+        overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', paddingRight: '15px', pointerEvents: 'auto'
       }}>
         <AnimatePresence>
           {chatHistory.map((msg, idx) => (
@@ -222,7 +222,7 @@ export default function ConversationUI() {
                 alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
                 display: 'flex',
                 gap: '15px',
-                maxWidth: '90%',
+                maxWidth: '85%',
                 flexDirection: msg.sender === 'user' ? 'row-reverse' : 'row',
                 alignItems: 'flex-start'
               }}

@@ -13,6 +13,7 @@ import PowersExperience from './components/Powers/PowersExperience';
 import CosmicMap from './components/UI/CosmicMap';
 import HelpSignals from './components/Environment/HelpSignals';
 import InspiredHome from './components/Environment/InspiredHome';
+import MeteorEmergency from './components/Environment/MeteorEmergency';
 import CustomCursor from './components/UI/CustomCursor';
 import './styles/ui.css';
 import './styles/starways.css';
@@ -45,6 +46,9 @@ function AppRenderer() {
       {appMode === AppModes.MAP && <CosmicMap />}
       {appMode === AppModes.STARWAYS && <Starways isExploreMode={true} />}
       {appMode === AppModes.HELP_SIGNALS && <HelpSignals />}
+      
+      {/* Cinematic Meteor Emergency Event */}
+      <MeteorEmergency />
     </div>
   );
 }

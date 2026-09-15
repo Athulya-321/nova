@@ -1,0 +1,506 @@
+/* ==========================================================================
+   MEET NOVA - FULL-SCREEN CINEMATIC SLIDE ANIMATIONS
+   Tailored, distinctive, subtle 15% environmental motion for all 7 slides.
+   Occupies 100% viewport, stays behind text and UI (pointer-events: none).
+   ========================================================================== */
+
+.fullscreen-story-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 60;
+  background: #04030a;
+  overflow: hidden;
+  user-select: none;
+}
+
+.fullscreen-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.slide-anim-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .slide-anim-container,
+  .fullscreen-slide * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   SLIDE 1 — THE WORLD OF VEYRA (Living, Peaceful World)
+   ========================================================================== */
+
+/* Aurelis Star Breathing Pulse (3s brighten, 3s dim = 6s cycle) */
+.s1-aurelis-glow {
+  position: absolute;
+  top: 14%;
+  left: 44%;
+  width: 28%;
+  height: 38%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 245, 215, 0.45) 0%, rgba(255, 190, 115, 0.22) 35%, rgba(140, 195, 255, 0.08) 60%, transparent 80%);
+  mix-blend-mode: screen;
+  animation: s1AurelisPulse 6s ease-in-out infinite;
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+@keyframes s1AurelisPulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.98); }
+  50% { opacity: 0.75; transform: scale(1.03); }
+}
+
+/* Floating Islands Micro-Vertical Motion (2-4px up and down over 6-8s) */
+.s1-island-float-1 {
+  position: absolute;
+  top: 18%;
+  left: 14%;
+  width: 20%;
+  height: 22%;
+  mix-blend-mode: overlay;
+  background: radial-gradient(ellipse at center, rgba(160, 210, 255, 0.14) 0%, transparent 70%);
+  animation: s1IslandMove1 7s ease-in-out infinite;
+}
+
+.s1-island-float-2 {
+  position: absolute;
+  top: 24%;
+  left: 32%;
+  width: 18%;
+  height: 20%;
+  mix-blend-mode: overlay;
+  background: radial-gradient(ellipse at center, rgba(160, 210, 255, 0.12) 0%, transparent 70%);
+  animation: s1IslandMove2 8.2s ease-in-out infinite 1.5s;
+}
+
+.s1-island-float-3 {
+  position: absolute;
+  top: 22%;
+  left: 4%;
+  width: 14%;
+  height: 18%;
+  mix-blend-mode: overlay;
+  background: radial-gradient(ellipse at center, rgba(160, 210, 255, 0.1) 0%, transparent 70%);
+  animation: s1IslandMove3 6.5s ease-in-out infinite 0.8s;
+}
+
+@keyframes s1IslandMove1 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes s1IslandMove2 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2.5px); }
+}
+
+@keyframes s1IslandMove3 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3.5px); }
+}
+
+/* Waterfalls Continuous Downward Shimmer */
+.s1-waterfall-stream-left {
+  position: absolute;
+  top: 38%;
+  left: 22.8%;
+  width: 4.5%;
+  height: 28%;
+  background: linear-gradient(180deg, transparent 0%, rgba(200, 240, 255, 0.35) 50%, transparent 100%);
+  mix-blend-mode: screen;
+  filter: blur(2px);
+  animation: s1WaterfallFlow 4.5s linear infinite;
+}
+
+.s1-waterfall-stream-right {
+  position: absolute;
+  top: 42%;
+  left: 70.5%;
+  width: 5.5%;
+  height: 26%;
+  background: linear-gradient(180deg, transparent 0%, rgba(200, 240, 255, 0.3) 50%, transparent 100%);
+  mix-blend-mode: screen;
+  filter: blur(2px);
+  animation: s1WaterfallFlow 5.2s linear infinite 1.2s;
+}
+
+@keyframes s1WaterfallFlow {
+  0% { transform: translateY(-12%); opacity: 0.2; }
+  50% { opacity: 0.55; }
+  100% { transform: translateY(16%); opacity: 0.15; }
+}
+
+/* Atmosphere Mist Horizontal Drift (12-15s cycle) */
+.s1-atmosphere-mist {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  height: 40%;
+  background: radial-gradient(ellipse at center, rgba(180, 220, 255, 0.08) 0%, transparent 70%);
+  mix-blend-mode: screen;
+  animation: s1MistDrift 13.5s ease-in-out infinite alternate;
+  filter: blur(16px);
+}
+
+@keyframes s1MistDrift {
+  0% { transform: translateX(-4px); }
+  100% { transform: translateX(5px); }
+}
+
+/* Starway Glowing Rings Shimmer */
+.s1-rings-shimmer {
+  position: absolute;
+  top: 32%;
+  left: 28%;
+  width: 46%;
+  height: 36%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, transparent 48%, rgba(140, 220, 255, 0.3) 55%, transparent 64%);
+  mix-blend-mode: screen;
+  animation: s1RingShimmer 8s ease-in-out infinite;
+  filter: blur(4px);
+}
+
+@keyframes s1RingShimmer {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.65; }
+}
+
+/* ==========================================================================
+   SLIDE 2 — THE GUARDIAN AND KAELEN (Warmth & Mentorship)
+   ========================================================================== */
+
+.s2-starway-pulse {
+  position: absolute;
+  top: 18%;
+  left: 22%;
+  width: 56%;
+  height: 40%;
+  background: radial-gradient(circle at 35% 45%, rgba(120, 210, 255, 0.3) 0%, transparent 40%),
+              radial-gradient(circle at 65% 35%, rgba(200, 150, 255, 0.25) 0%, transparent 45%);
+  mix-blend-mode: screen;
+  animation: s2StarwayBreath 5.5s ease-in-out infinite;
+  filter: blur(8px);
+}
+
+@keyframes s2StarwayBreath {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+.s2-table-crystal {
+  position: absolute;
+  top: 45%;
+  left: 42%;
+  width: 11%;
+  height: 15%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.75) 0%, rgba(140, 225, 255, 0.45) 45%, transparent 75%);
+  mix-blend-mode: screen;
+  animation: s2CrystalSparkle 3.8s ease-in-out infinite;
+  filter: blur(3px);
+}
+
+@keyframes s2CrystalSparkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.94); }
+  50% { opacity: 0.85; transform: scale(1.06); filter: blur(2px) drop-shadow(0 0 10px rgba(160, 240, 255, 0.8)); }
+}
+
+.s2-floor-runes-trail {
+  position: absolute;
+  bottom: 3%;
+  left: 26%;
+  width: 48%;
+  height: 38%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(140, 185, 255, 0.35) 60deg, transparent 120deg, rgba(200, 140, 255, 0.3) 240deg, transparent 360deg);
+  mix-blend-mode: screen;
+  animation: s2FloorRotate 24s linear infinite;
+  filter: blur(6px);
+}
+
+@keyframes s2FloorRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   SLIDE 3 — THE FALL OF VEYRA (Urgency & Danger)
+   ========================================================================== */
+
+.s3-flame-ruins-1 {
+  position: absolute;
+  bottom: 22%;
+  left: 45%;
+  width: 28%;
+  height: 35%;
+  background: radial-gradient(ellipse at bottom center, rgba(255, 120, 40, 0.55) 0%, rgba(255, 60, 10, 0.3) 45%, transparent 75%);
+  mix-blend-mode: screen;
+  filter: blur(8px);
+  animation: s3FlameFlicker 2.4s ease-in-out infinite alternate;
+}
+
+.s3-flame-ruins-2 {
+  position: absolute;
+  bottom: 26%;
+  left: 67%;
+  width: 22%;
+  height: 28%;
+  background: radial-gradient(ellipse at bottom center, rgba(255, 160, 50, 0.5) 0%, rgba(220, 50, 20, 0.25) 45%, transparent 75%);
+  mix-blend-mode: screen;
+  filter: blur(7px);
+  animation: s3FlameFlicker 3.1s ease-in-out infinite alternate 0.7s;
+}
+
+@keyframes s3FlameFlicker {
+  0% { opacity: 0.4; transform: scaleY(0.97); }
+  50% { opacity: 0.75; transform: scaleY(1.04); }
+  100% { opacity: 0.45; transform: scaleY(0.99); }
+}
+
+.s3-sky-heat-pulse {
+  position: absolute;
+  top: 0;
+  left: 15%;
+  width: 85%;
+  height: 50%;
+  background: radial-gradient(ellipse at 60% 30%, rgba(255, 70, 20, 0.32) 0%, rgba(180, 20, 40, 0.14) 50%, transparent 80%);
+  mix-blend-mode: screen;
+  animation: s3SkyPulse 4.8s ease-in-out infinite;
+  filter: blur(16px);
+}
+
+@keyframes s3SkyPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.75; }
+}
+
+.s3-portal-lightning {
+  position: absolute;
+  top: 24%;
+  left: 45%;
+  width: 24%;
+  height: 32%;
+  background: radial-gradient(circle, rgba(140, 220, 255, 0.35) 0%, rgba(100, 160, 255, 0.18) 50%, transparent 75%);
+  mix-blend-mode: screen;
+  animation: s3PortalFlicker 1.8s steps(3, jump-none) infinite;
+  filter: blur(4px);
+}
+
+@keyframes s3PortalFlicker {
+  0%, 100% { opacity: 0.25; }
+  45% { opacity: 0.75; }
+}
+
+/* ==========================================================================
+   SLIDE 4 — THE LAST LIGHT OF AURELIS (Sadness & Loss)
+   ========================================================================== */
+
+.s4-dying-aurelis-fade {
+  position: absolute;
+  top: 22%;
+  left: 64%;
+  width: 26%;
+  height: 36%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 235, 200, 0.65) 0%, rgba(255, 170, 100, 0.32) 40%, transparent 75%);
+  mix-blend-mode: screen;
+  animation: s4DyingAurelis 14s ease-in-out infinite;
+  filter: blur(14px);
+}
+
+@keyframes s4DyingAurelis {
+  0%, 100% { opacity: 0.22; transform: scale(0.92); }
+  50% { opacity: 0.8; transform: scale(1.06); filter: blur(10px) drop-shadow(0 0 20px rgba(255, 200, 140, 0.8)); }
+}
+
+.s4-core-heartbeat {
+  position: absolute;
+  top: 43%;
+  left: 47%;
+  width: 13%;
+  height: 18%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.75) 0%, rgba(130, 225, 255, 0.45) 45%, transparent 75%);
+  mix-blend-mode: screen;
+  animation: s4CorePulse 6s ease-in-out infinite;
+  filter: blur(4px);
+}
+
+@keyframes s4CorePulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.94); }
+  35% { opacity: 0.85; transform: scale(1.06); filter: blur(2px) drop-shadow(0 0 14px rgba(120, 230, 255, 0.9)); }
+  60% { opacity: 0.4; transform: scale(0.98); }
+}
+
+.s4-emotional-vignette {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  animation: s4AtmosphereDim 14s ease-in-out infinite;
+  mix-blend-mode: multiply;
+}
+
+@keyframes s4AtmosphereDim {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.5; }
+}
+
+/* ==========================================================================
+   SLIDE 5 — THE GUARDIAN WITHOUT A HOME (Loneliness & Compassion)
+   ========================================================================== */
+
+.s5-campfire-flicker {
+  position: absolute;
+  top: 65%;
+  left: 65%;
+  width: 9%;
+  height: 13%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 180, 70, 0.65) 0%, rgba(255, 80, 20, 0.3) 50%, transparent 75%);
+  mix-blend-mode: screen;
+  animation: s3FlameFlicker 2.6s ease-in-out infinite alternate;
+  filter: blur(4px);
+}
+
+.s5-lonely-atmosphere {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 38%, rgba(5, 5, 18, 0.38) 100%);
+  animation: s5LonelyCycle 13s ease-in-out infinite;
+  mix-blend-mode: multiply;
+}
+
+@keyframes s5LonelyCycle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.65; }
+}
+
+/* ==========================================================================
+   SLIDE 6 — EARTH, THE WORLD SHE CHOSE (Belonging & Hope)
+   ========================================================================== */
+
+.s6-sunset-glow {
+  position: absolute;
+  top: 28%;
+  left: 28%;
+  width: 68%;
+  height: 36%;
+  background: radial-gradient(ellipse at center, rgba(255, 160, 90, 0.32) 0%, rgba(255, 100, 50, 0.14) 55%, transparent 80%);
+  mix-blend-mode: screen;
+  animation: s6SunsetBreath 8.5s ease-in-out infinite;
+  filter: blur(18px);
+}
+
+@keyframes s6SunsetBreath {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.65; }
+}
+
+.s6-leaves-sway {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32%;
+  height: 38%;
+  background: radial-gradient(ellipse at 15% 15%, rgba(120, 160, 140, 0.12) 0%, transparent 70%);
+  mix-blend-mode: screen;
+  animation: s6LeavesBreeze 7s ease-in-out infinite alternate;
+  transform-origin: top left;
+}
+
+@keyframes s6LeavesBreeze {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(0.6deg) translateY(-2px); }
+  100% { transform: rotate(-0.3deg); }
+}
+
+.s6-nova-tail-glow {
+  position: absolute;
+  top: 51%;
+  left: 59%;
+  width: 8%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(130, 220, 255, 0.55) 0%, rgba(80, 160, 255, 0.22) 50%, transparent 75%);
+  mix-blend-mode: screen;
+  animation: s1AurelisPulse 5s ease-in-out infinite;
+  filter: blur(4px);
+}
+
+/* ==========================================================================
+   SLIDE 7 — NOVA TODAY (Hope & Purpose)
+   ========================================================================== */
+
+.s7-nebula-clouds {
+  position: absolute;
+  top: 14%;
+  left: 18%;
+  width: 68%;
+  height: 48%;
+  background: radial-gradient(ellipse at 40% 40%, rgba(160, 120, 255, 0.24) 0%, rgba(100, 180, 255, 0.2) 40%, transparent 75%);
+  mix-blend-mode: screen;
+  animation: s7NebulaDrift 28s ease-in-out infinite alternate;
+  filter: blur(16px);
+}
+
+@keyframes s7NebulaDrift {
+  0% { transform: scale(1) translateX(0); opacity: 0.3; }
+  50% { transform: scale(1.05) translateX(12px); opacity: 0.6; }
+  100% { transform: scale(0.98) translateX(-8px); opacity: 0.35; }
+}
+
+.s7-forehead-crystal-pulse {
+  position: absolute;
+  top: 38.8%;
+  left: 59.8%;
+  width: 3%;
+  height: 4%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(140, 240, 255, 0.7) 45%, transparent 80%);
+  mix-blend-mode: screen;
+  animation: s7CrystalGlint 3.8s ease-in-out infinite;
+  filter: blur(1.5px);
+}
+
+@keyframes s7CrystalGlint {
+  0%, 100% { opacity: 0.25; transform: scale(0.85); }
+  50% { opacity: 0.95; transform: scale(1.2); filter: drop-shadow(0 0 8px rgba(160, 240, 255, 1)); }
+}
+
+.s7-platform-runes {
+  position: absolute;
+  bottom: 6%;
+  left: 40%;
+  width: 32%;
+  height: 24%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(130, 210, 255, 0.38) 60deg, transparent 140deg, rgba(170, 130, 255, 0.32) 240deg, transparent 360deg);
+  mix-blend-mode: screen;
+  animation: s2FloorRotate 22s linear infinite;
+  filter: blur(6px);
+}
