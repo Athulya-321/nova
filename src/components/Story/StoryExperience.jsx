@@ -7,49 +7,49 @@ import FullScreenStoryCanvas from './FullScreenStoryCanvas';
 const storySlides = [
   { 
     id: 1, 
-    bg: '/slide 1.png',
+    bg: '/slide 1.webp',
     tag: 'THE WORLD OF VEYRA',
     title: 'THE FALLEN HOME',
     text: 'On a distant world orbiting a dying star, lived the Starforged.'
   },
   { 
     id: 2, 
-    bg: '/slide 2.png',
+    bg: '/slide 2.webp',
     tag: 'THE GUARDIAN AND KAELEN',
     title: 'A CURIOUS SPIRIT',
     text: 'Among them was Nova, curious and adventurous, dreaming of exploring new worlds.'
   },
   { 
     id: 3, 
-    bg: '/slide 3.png',
+    bg: '/slide 3.webp',
     tag: 'THE FALL OF VEYRA',
     title: 'THE MENTOR\'S LESSON',
     text: 'Nova was trained by a wise guardian who taught her that true strength is in compassion.'
   },
   { 
     id: 4, 
-    bg: '/slide 4.png',
+    bg: '/slide 4.webp',
     tag: 'THE LAST LIGHT OF AURELIS',
     title: 'THE SHADOW REACHES',
     text: 'One day, a powerful enemy attacked, seeking to steal the energy of their dying star.'
   },
   { 
     id: 5, 
-    bg: '/slide 5.png',
+    bg: '/slide 5.webp',
     tag: 'THE GUARDIAN WITHOUT A HOME',
     title: 'THE LAST LIGHT',
     text: 'As the world collapsed, Nova’s mentor transferred the last fragment of his Star Core into her.'
   },
   { 
     id: 6, 
-    bg: '/slide 6.png',
+    bg: '/slide 6.webp',
     tag: 'EARTH, THE WORLD SHE CHOSE',
     title: 'THE JOURNEY BEGINS',
     text: 'Alone but not defeated, she traveled from planet to planet, bringing hope to places others had forgotten.'
   },
   { 
     id: 7, 
-    bg: '/slide 7.png',
+    bg: '/slide 7.webp',
     tag: 'NOVA TODAY',
     title: 'GUARDIAN OF THE STARWAYS',
     text: 'Eventually, Nova discovered Earth. Now, she listens and watches over those who feel lost or alone.'

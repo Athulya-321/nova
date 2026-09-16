@@ -55,7 +55,7 @@ export default function InspiredHome() {
           left: 0,
           width: '100%',
           height: '100%',
-          backgroundImage: 'url(/home_earth_bg_uhd.png)',
+          backgroundImage: 'url(/home_earth_bg_uhd.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           filter: isDull ? 'brightness(0.7) contrast(1.1) saturate(0.8)' : isHappy ? 'brightness(1.1) contrast(1.1) saturate(1.2)' : 'none',
@@ -98,7 +98,7 @@ export default function InspiredHome() {
         
         {/* Canonical Nova Image */}
         <div className="nova-cutout-wrapper">
-          <img src="/crop.jpeg" alt="Nova Cosmic Guardian" className="nova-cutout-img" />
+          <img src="/crop.webp" alt="Nova Cosmic Guardian" className="nova-cutout-img" />
         </div>
 
         {/* Home Page Writing */}

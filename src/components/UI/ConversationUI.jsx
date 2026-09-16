@@ -232,7 +232,7 @@ export default function ConversationUI() {
                 <div style={{ 
                   width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
                   border: '2px solid rgba(125, 226, 255, 0.5)', 
-                  background: 'url(/crop.jpeg) center / cover', 
+                  background: 'url(/crop.webp) center / cover', 
                   boxShadow: '0 0 15px rgba(125, 226, 255, 0.3)'
                 }} />
               ) : null}
@@ -271,7 +271,7 @@ export default function ConversationUI() {
           
           {isTyping && (
              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ alignSelf: 'flex-start', display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
-               <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid rgba(125, 226, 255, 0.5)', background: 'url(/crop.jpeg) center / cover' }} />
+               <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid rgba(125, 226, 255, 0.5)', background: 'url(/crop.webp) center / cover' }} />
                <div style={{ background: 'rgba(11, 10, 26, 0.75)', padding: '20px', borderRadius: '20px', borderTopLeftRadius: '5px', borderLeft: '3px solid var(--nova-core)' }}>
                  <div style={{ display: 'flex', gap: '5px' }}>
                    <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} style={{ width: 6, height: 6, background: 'var(--nova-core)', borderRadius: '50%' }} />

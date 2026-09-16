@@ -42,9 +42,9 @@ export default function VisitorStar() {
   const isHappy = visitorMood === 'happy';
 
   const getStarImageSrc = () => {
-    if (isSad) return '/visitor_star_sad.png';
-    if (isHappy) return '/visitor_star_happy.png';
-    return '/visitor_star.png';
+    if (isSad) return '/visitor_star_sad.webp';
+    if (isHappy) return '/visitor_star_happy.webp';
+    return '/visitor_star.webp';
   };
 
   return (

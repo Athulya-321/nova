@@ -172,7 +172,7 @@ export default function NovaCharacter() {
         style={{ position: 'relative', display: 'inline-block', transformOrigin: 'bottom center' }}
       >
         <img 
-          src="/nova_character.png" 
+          src="/nova_character.webp" 
           alt="Nova" 
           style={{
             height: '60vh',

@@ -43,7 +43,7 @@ export default function PowersExperience() {
         transition={{ duration: 1 }}
         style={{ 
           position: 'absolute', width: '100%', height: '100%',
-          backgroundImage: 'url(/nova_powers_temple.jpg)',
+          backgroundImage: 'url(/nova_powers_temple.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

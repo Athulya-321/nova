@@ -124,7 +124,7 @@ export default function HelpSignals() {
         transition={{ duration: 0.4, ease: "easeInOut" }}
         style={{
           position: 'absolute', width: '100%', height: '100%', zIndex: 1,
-          backgroundImage: 'url("/detect.png")',
+          backgroundImage: 'url("/detect.webp")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

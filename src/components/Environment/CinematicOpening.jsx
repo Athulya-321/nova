@@ -130,7 +130,7 @@ export default function CinematicOpening() {
                   width: '300px',
                   height: '300px',
                   borderRadius: '50%',
-                  backgroundImage: "url('/crop.jpeg')",
+                  backgroundImage: "url('/crop.webp')",
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   boxShadow: '0 0 50px rgba(125, 226, 255, 0.4)',

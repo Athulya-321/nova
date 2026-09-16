@@ -81,32 +81,107 @@ export default function MeteorEmergency() {
     };
   }, []);
 
-  // 10-Second Mission Countdown Timer (Starts exactly at 10)
+  // Demonstration (3 cycles) vs Real 10-Second Challenge
+  const [isDemonstrating, setIsDemonstrating] = useState(false);
+  const isDemonstratingRef = useRef(false);
+  const [demoCycle, setDemoCycle] = useState(1);
+  const [demoT, setDemoT] = useState(0); // 0.0 to 1.0 (interpolation from Star 1 to Star 2)
+  const [isChallengeActive, setIsChallengeActive] = useState(false);
+  const isChallengeActiveRef = useRef(false);
+
+  // 10-Second Mission Countdown Timer (Starts ONLY after 3-cycle demonstration)
+  const missionStartTimeRef = useRef(null);
+  const isDivertingRef = useRef(false);
+  const divertStartRef = useRef(null);
+  const divertFromPosRef = useRef({ x: 0, y: 0 });
+  const hasFailedRef = useRef(false);
+
+  // Start the real 10-second challenge
+  const startRealChallenge = () => {
+    setIsDemonstrating(false);
+    isDemonstratingRef.current = false;
+    setIsChallengeActive(true);
+    isChallengeActiveRef.current = true;
+    missionStartTimeRef.current = performance.now();
+    setConnectedCount(0);
+    setCountdown(10);
+    setNovaDialogue("Now it's your turn! Connect the stars. You have 10 seconds!");
+  };
+
+  // Automated 3-cycle demonstration of connecting Star 1 to Star 2
   useEffect(() => {
-    if (eventState !== 'MISSION' || isDiverting) return;
+    if (eventState !== 'MISSION' || !isDemonstrating) return;
+
+    let startTime = performance.now();
+    const cycleDuration = 1600; // 1.6s per cycle, 4.8s total for 3 cycles
 
     const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          handleMissionFailure();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      const elapsed = performance.now() - startTime;
+      const cycleNum = Math.floor(elapsed / cycleDuration) + 1;
+      const cycleTime = elapsed % cycleDuration;
+
+      if (cycleNum > 3) {
+        clearInterval(interval);
+        startRealChallenge();
+        return;
+      }
+
+      setDemoCycle(cycleNum);
+
+      // Phase timing within each 1.6s cycle:
+      // 0 - 300ms: Arrow at Star 1
+      // 300 - 1300ms: Arrow travels from Star 1 to Star 2, line extends
+      // 1300 - 1600ms: Arrow reaches Star 2, line connected
+      if (cycleTime < 300) {
+        setDemoT(0);
+      } else if (cycleTime < 1300) {
+        const moveProgress = (cycleTime - 300) / 1000;
+        setDemoT(moveProgress);
+      } else {
+        setDemoT(1);
+      }
+    }, 30);
 
     return () => clearInterval(interval);
-  }, [eventState, isDiverting]);
+  }, [eventState, isDemonstrating]);
 
-  // Handle Action: HELP NOVA
+  // 10-Second Countdown interval during active challenge
+  useEffect(() => {
+    if (eventState !== 'MISSION' || isDiverting || !isChallengeActive) return;
+
+    const interval = setInterval(() => {
+      if (!missionStartTimeRef.current) return;
+      const elapsed = performance.now() - missionStartTimeRef.current;
+      const remainingMs = Math.max(0, 10000 - elapsed);
+      const secs = Math.ceil(remainingMs / 1000);
+      setCountdown(secs);
+      if (elapsed >= 10000) {
+        clearInterval(interval);
+        setCountdown(0);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [eventState, isDiverting, isChallengeActive]);
+
+  // Handle Action: HELP NOVA (Starts with 3-cycle demonstration)
   const handleStartMission = () => {
+    setIsDemonstrating(true);
+    isDemonstratingRef.current = true;
+    setDemoCycle(1);
+    setDemoT(0);
+    setIsChallengeActive(false);
+    isChallengeActiveRef.current = false;
+    missionStartTimeRef.current = null;
+    isDivertingRef.current = false;
+    divertStartRef.current = null;
+    hasFailedRef.current = false;
     setEventState('MISSION');
     setConnectedCount(0);
     setCountdown(10);
     setIsDiverting(false);
     meteorVideoStartedRef.current = false;
-    setNovaDialogue("Traveler, the meteor is almost here. Connect the stars to redirect its path. You have 10 seconds.");
+    setNovaDialogue("Watch closely, traveler... connect the stars to form the cosmic shield.");
   };
 
   // ==========================================
@@ -114,6 +189,9 @@ export default function MeteorEmergency() {
   // ==========================================
   const handleWatchCinematic = () => {
     // 1. Visitor chooses NOT to help Nova. Close modal smoothly.
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('meteorMissionOutcome', 'watched');
+    }
     setEventState('WATCH_PROMPT');
     videoOriginRef.current = 'WATCH';
     meteorVideoStartedRef.current = false;
@@ -150,15 +228,46 @@ export default function MeteorEmergency() {
 
   // Handle Clicking a Constellation Star Node
   const handleStarClick = (nodeIndex) => {
-    if (eventState !== 'MISSION' || isDiverting || countdown <= 0) return;
+    if (eventState !== 'MISSION' || isDiverting || hasFailedRef.current) return;
+
+    // If visitor clicks while demonstration is running, start real challenge immediately
+    if (isDemonstratingRef.current) {
+      startRealChallenge();
+      return;
+    }
+
+    // Disallow clicks if countdown expired during active challenge
+    if (countdown <= 0) return;
 
     if (nodeIndex === connectedCount) {
       const nextCount = connectedCount + 1;
       setConnectedCount(nextCount);
 
+      // Subsequent star clicks (Star 1 through Star 5) during active challenge
       if (nextCount === CONSTELLATION_NODES.length) {
         // SUCCESS: Stop countdown immediately & alter trajectory
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('meteorMissionOutcome', 'protected');
+        }
+        isDivertingRef.current = true;
         setIsDiverting(true);
+
+        // Record exact frozen position for diversion curve
+        if (missionStartTimeRef.current) {
+          const elapsed = Math.max(0, performance.now() - missionStartTimeRef.current);
+          const progress = Math.min(elapsed / 10000, 1.0);
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          const startX = width * 0.08;
+          const startY = height * 0.15;
+          const earthX = width * 0.82;
+          const earthY = height * 0.52;
+          divertFromPosRef.current = {
+            x: startX + (earthX - startX) * progress,
+            y: startY + (earthY - startY) * progress
+          };
+        }
+
         setNovaDialogue("You did it! Trajectory altered.");
         
         // Begin "The Starways Remember You" recognition sequence after trajectory completes
@@ -173,6 +282,9 @@ export default function MeteorEmergency() {
   // FAILURE SEQUENCE CONTROLLERS
   // ==========================================
   const handleMissionFailure = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('meteorMissionOutcome', 'timeout');
+    }
     setEventState('FAILURE_WARNING');
     videoOriginRef.current = 'FAILURE';
     setFailureNovaMsg("“Traveler... we ran out of time.”");
@@ -310,7 +422,7 @@ export default function MeteorEmergency() {
     }, 17500);
   };
 
-  // Canvas for Earth and Meteor trajectory animation
+  // Canvas for Earth and Single Continuous 10-Second Meteor Trajectory Animation
   const stageCanvasRef = useRef(null);
   useEffect(() => {
     if (eventState !== 'MISSION' && eventState !== 'RECOGNITION') return;
@@ -328,9 +440,7 @@ export default function MeteorEmergency() {
     };
     window.addEventListener('resize', handleResize);
 
-    let meteorProgress = 0;
-
-    const render = () => {
+    const render = (currentTime) => {
       ctx.clearRect(0, 0, width, height);
 
       const earthX = width * 0.82;
@@ -357,18 +467,26 @@ export default function MeteorEmergency() {
       ctx.arc(earthX, earthY, earthRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // 2. Draw Meteor Trajectory
-      meteorProgress = (meteorProgress + 0.003) % 1;
+      // 2. Draw Single Continuous 10-Second Meteor Trajectory
+      const startX = width * 0.08;
+      const startY = height * 0.15;
       let meteorX, meteorY;
+      let progress = 0;
 
-      if (!isDiverting) {
-        // Approaching Earth directly from top-left
-        const startX = width * 0.1;
-        const startY = height * 0.18;
-        meteorX = startX + (earthX - startX) * (0.15 + meteorProgress * 0.65);
-        meteorY = startY + (earthY - startY) * (0.15 + meteorProgress * 0.65);
+      if (isChallengeActiveRef.current && missionStartTimeRef.current) {
+        const elapsed = Math.max(0, currentTime - missionStartTimeRef.current);
+        progress = Math.min(elapsed / 10000, 1.0);
+      } else {
+        // In Phase 1 (Demonstration), meteor stays at starting position
+        progress = 0;
+      }
 
-        // Trajectory dashed line (Threat)
+      if (!isDivertingRef.current) {
+        // Approaching Earth directly along single continuous trajectory (0.0 to 1.0)
+        meteorX = startX + (earthX - startX) * progress;
+        meteorY = startY + (earthY - startY) * progress;
+
+        // Trajectory dashed threat line
         ctx.strokeStyle = 'rgba(255, 80, 60, 0.35)';
         ctx.lineWidth = 1.5;
         ctx.setLineDash([6, 6]);
@@ -377,47 +495,69 @@ export default function MeteorEmergency() {
         ctx.lineTo(earthX, earthY);
         ctx.stroke();
         ctx.setLineDash([]);
-      } else {
-        // Diverted into Starway (curves smoothly upward into deep cosmos)
-        const startX = width * 0.25;
-        const startY = height * 0.4;
-        const cpX = width * 0.6;
-        const cpY = height * 0.45;
-        const endX = width * 0.85;
-        const endY = height * 0.08;
 
-        const t = Math.min(meteorProgress * 1.5, 1);
-        meteorX = (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * cpX + t * t * endX;
-        meteorY = (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * cpY + t * t * endY;
+        // Handle mission failure trigger if timer reaches 10.0s (00:00) without completion in Phase 2
+        if (isChallengeActiveRef.current && progress >= 1.0 && !hasFailedRef.current && !isDivertingRef.current) {
+          hasFailedRef.current = true;
+          handleMissionFailure();
+        }
+      } else {
+        // Diverted smoothly into deep cosmos Starway
+        if (!divertStartRef.current) {
+          divertStartRef.current = currentTime;
+        }
+        const divertElapsed = currentTime - divertStartRef.current;
+        const divertT = Math.min(divertElapsed / 2200, 1.0);
+
+        const freezeX = divertFromPosRef.current.x || (startX + (earthX - startX) * 0.5);
+        const freezeY = divertFromPosRef.current.y || (startY + (earthY - startY) * 0.5);
+        const cpX = freezeX + (width * 0.85 - freezeX) * 0.4;
+        const cpY = freezeY - height * 0.35;
+        const endX = width * 0.92;
+        const endY = height * 0.05;
+
+        const t = divertT;
+        meteorX = (1 - t) * (1 - t) * freezeX + 2 * (1 - t) * t * cpX + t * t * endX;
+        meteorY = (1 - t) * (1 - t) * freezeY + 2 * (1 - t) * t * cpY + t * t * endY;
 
         // Safe diverted trajectory line (Cyan Starway)
-        ctx.strokeStyle = 'rgba(125, 226, 255, 0.55)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(125, 226, 255, 0.6)';
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(startX, startY);
+        ctx.moveTo(freezeX, freezeY);
         ctx.quadraticCurveTo(cpX, cpY, endX, endY);
         ctx.stroke();
       }
 
-      // 3. Draw Meteor Flame & Glowing Core
-      ctx.shadowColor = isDiverting ? 'rgba(125, 226, 255, 1)' : 'rgba(255, 100, 30, 1)';
-      ctx.shadowBlur = 15;
-      ctx.fillStyle = isDiverting ? '#ffffff' : '#ffd060';
+      // 3. 3D / Depth of Meteor:
+      // Small & dimmer far away, larger & brighter with stronger trail near Earth
+      const isDiv = isDivertingRef.current;
+      const currentRadius = isDiv ? 7 : (4.5 + progress * 6.5);
+      const glowBlur = isDiv ? 18 : (8 + progress * 16);
+      const tailLength = isDiv ? 45 : (25 + progress * 45);
+      const tailWidth = isDiv ? 5 : (3 + progress * 5);
+
+      // Glowing Meteor Core
+      ctx.shadowColor = isDiv ? 'rgba(125, 226, 255, 1)' : (progress > 0.6 ? 'rgba(255, 70, 20, 1)' : 'rgba(255, 120, 40, 1)');
+      ctx.shadowBlur = glowBlur;
+      ctx.fillStyle = isDiv ? '#ffffff' : (progress > 0.7 ? '#ffffff' : '#ffd060');
       ctx.beginPath();
-      ctx.arc(meteorX, meteorY, 7, 0, Math.PI * 2);
+      ctx.arc(meteorX, meteorY, currentRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
       // Meteor Tail Flame
-      const tailLength = 40;
-      const angle = isDiverting ? -Math.PI / 4 : Math.atan2(earthY - meteorY, earthX - meteorX) + Math.PI;
+      const angle = isDiv 
+        ? Math.atan2(meteorY - (divertFromPosRef.current.y || startY), meteorX - (divertFromPosRef.current.x || startX)) + Math.PI
+        : Math.atan2(earthY - meteorY, earthX - meteorX) + Math.PI;
       const tailX = meteorX + Math.cos(angle) * tailLength;
       const tailY = meteorY + Math.sin(angle) * tailLength;
       const tailGrad = ctx.createLinearGradient(meteorX, meteorY, tailX, tailY);
-      tailGrad.addColorStop(0, isDiverting ? 'rgba(125, 226, 255, 0.85)' : 'rgba(255, 120, 40, 0.85)');
+      tailGrad.addColorStop(0, isDiv ? 'rgba(125, 226, 255, 0.9)' : (progress > 0.6 ? 'rgba(255, 90, 30, 0.95)' : 'rgba(255, 140, 40, 0.8)'));
       tailGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.strokeStyle = tailGrad;
-      ctx.lineWidth = 5;
+      ctx.lineWidth = tailWidth;
+      ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(meteorX, meteorY);
       ctx.lineTo(tailX, tailY);
@@ -426,13 +566,17 @@ export default function MeteorEmergency() {
       animId = requestAnimationFrame(render);
     };
 
-    render();
+    animId = requestAnimationFrame(render);
 
     return () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animId);
     };
-  }, [eventState, isDiverting]);
+  }, [eventState, isDiverting, isChallengeActive]);
+
+  const targetStarNode = (connectedCount < CONSTELLATION_NODES.length && !isDiverting && (isChallengeActive ? countdown > 0 : true))
+    ? CONSTELLATION_NODES[connectedCount]
+    : null;
 
   return (
     <>
@@ -535,7 +679,7 @@ export default function MeteorEmergency() {
         )}
       </AnimatePresence>
 
-      {/* 5. Full-Screen Interactive Mission & Constellation Game (10s Countdown) */}
+      {/* 5. Full-Screen Interactive Mission & Constellation Game (Phase 1 & Phase 2) */}
       <AnimatePresence>
         {eventState === 'MISSION' && (
           <motion.div
@@ -558,60 +702,196 @@ export default function MeteorEmergency() {
                 )}
               </div>
 
-              {!isDiverting && (
+              {/* Countdown is shown ONLY during Phase 2 Real Challenge */}
+              {!isDiverting && isChallengeActive && (
                 <div className="meteor-countdown">
                   IMPACT IN: 00:{countdown < 10 ? `0${countdown}` : countdown}
                 </div>
               )}
             </div>
 
+            {/* Constellation Visual Instructions Header */}
+            {!isDiverting && (
+              <div className="constellation-instruction-header">
+                <div className="constellation-inst-title">CONNECT THE STARS</div>
+                <div className="constellation-inst-subtitle">TO REDIRECT THE METEOR</div>
+
+                {/* Demonstration vs Real Challenge Badges */}
+                {isDemonstrating ? (
+                  <div className="demo-instruction-badge">
+                    <span className="demo-badge-text">DEMONSTRATION: STAR 1 → STAR 2</span>
+                    <span className="demo-badge-cycle">CYCLE {demoCycle} / 3</span>
+                    <button 
+                      className="demo-skip-btn"
+                      onClick={startRealChallenge}
+                      title="Skip tutorial and start immediately"
+                    >
+                      [ START NOW ]
+                    </button>
+                  </div>
+                ) : (
+                  <motion.div
+                    key="challenge-hint"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="constellation-inst-hint"
+                  >
+                    Follow the glowing path.
+                  </motion.div>
+                )}
+              </div>
+            )}
+
             {/* Earth & Meteor Canvas Stage */}
             <canvas ref={stageCanvasRef} className="meteor-space-stage" />
 
             {/* Constellation Connecting SVG Lines */}
             <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 22 }}>
-              {CONSTELLATION_NODES.map((node, i) => {
+              <defs>
+                <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3.5" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Demonstration animated growing connection line (3 cycles) */}
+              {isDemonstrating && (
+                <g className="demo-connection-group">
+                  <line
+                    x1={`${CONSTELLATION_NODES[0].x}vw`}
+                    y1={`${CONSTELLATION_NODES[0].y}vh`}
+                    x2={`${CONSTELLATION_NODES[1].x}vw`}
+                    y2={`${CONSTELLATION_NODES[1].y}vh`}
+                    stroke="rgba(125, 226, 255, 0.25)"
+                    strokeWidth="3"
+                    strokeDasharray="4 4"
+                  />
+                  {demoT > 0 && (
+                    <line
+                      x1={`${CONSTELLATION_NODES[0].x}vw`}
+                      y1={`${CONSTELLATION_NODES[0].y}vh`}
+                      x2={`${CONSTELLATION_NODES[0].x + (CONSTELLATION_NODES[1].x - CONSTELLATION_NODES[0].x) * demoT}vw`}
+                      y2={`${CONSTELLATION_NODES[0].y + (CONSTELLATION_NODES[1].y - CONSTELLATION_NODES[0].y) * demoT}vh`}
+                      stroke="#7de2ff"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      filter="url(#starGlow)"
+                    />
+                  )}
+                </g>
+              )}
+
+              {/* Real connected glowing lines (during challenge) */}
+              {!isDemonstrating && CONSTELLATION_NODES.map((node, i) => {
                 if (i === 0 || i > connectedCount) return null;
                 const prevNode = CONSTELLATION_NODES[i - 1];
                 return (
-                  <line
+                  <motion.line
                     key={`line-${i}`}
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
                     x1={`${prevNode.x}vw`}
                     y1={`${prevNode.y}vh`}
                     x2={`${node.x}vw`}
                     y2={`${node.y}vh`}
-                    stroke="rgba(125, 226, 255, 0.9)"
+                    stroke="rgba(125, 226, 255, 0.95)"
                     strokeWidth="3"
-                    filter="drop-shadow(0 0 8px rgba(125, 226, 255, 1))"
+                    strokeLinecap="round"
+                    filter="url(#starGlow)"
                   />
                 );
               })}
-              {connectedCount >= 5 && (
-                <line
+              {!isDemonstrating && connectedCount >= 5 && (
+                <motion.line
+                  key="line-close"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
                   x1={`${CONSTELLATION_NODES[4].x}vw`}
                   y1={`${CONSTELLATION_NODES[4].y}vh`}
                   x2={`${CONSTELLATION_NODES[0].x}vw`}
                   y2={`${CONSTELLATION_NODES[0].y}vh`}
-                  stroke="rgba(125, 226, 255, 0.9)"
+                  stroke="rgba(125, 226, 255, 0.95)"
                   strokeWidth="3"
-                  filter="drop-shadow(0 0 8px rgba(125, 226, 255, 1))"
+                  strokeLinecap="round"
+                  filter="url(#starGlow)"
                 />
               )}
             </svg>
 
+            {/* Demonstration Arrow (Glides smoothly from Star 1 to Star 2) */}
+            {isDemonstrating && (
+              <div
+                className="star-guiding-arrow demo-arrow"
+                style={{
+                  left: `${CONSTELLATION_NODES[0].x + (CONSTELLATION_NODES[1].x - CONSTELLATION_NODES[0].x) * demoT}vw`,
+                  top: `${CONSTELLATION_NODES[0].y + (CONSTELLATION_NODES[1].y - CONSTELLATION_NODES[0].y) * demoT}vh`,
+                  transition: 'none'
+                }}
+              >
+                <div className="guiding-arrow-inner">
+                  <svg width="26" height="34" viewBox="0 0 24 32" fill="none" className="guiding-arrow-svg">
+                    <path
+                      d="M12 2 L12 24 M12 24 L5 16 M12 24 L19 16"
+                      stroke="#7de2ff"
+                      strokeWidth="2.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+            )}
+
+            {/* Real Challenge Guiding Arrow pointing to current target star */}
+            {!isDemonstrating && targetStarNode && (
+              <motion.div
+                key={`guiding-arrow-${connectedCount}`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+                className="star-guiding-arrow"
+                style={{
+                  left: `${targetStarNode.x}vw`,
+                  top: `${targetStarNode.y}vh`
+                }}
+              >
+                <div className="guiding-arrow-inner">
+                  <svg width="24" height="32" viewBox="0 0 24 32" fill="none" className="guiding-arrow-svg">
+                    <path
+                      d="M12 2 L12 24 M12 24 L5 16 M12 24 L19 16"
+                      stroke="#7de2ff"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </motion.div>
+            )}
+
             {/* Constellation Star Nodes */}
             {CONSTELLATION_NODES.map((node, idx) => {
-              const isConnected = idx < connectedCount;
-              const isTarget = idx === connectedCount && !isDiverting && countdown > 0;
+              const isConnected = !isDemonstrating && idx < connectedCount;
+              const isTarget = !isDemonstrating && idx === connectedCount && !isDiverting && countdown > 0;
+              const isFuture = !isDemonstrating && idx > connectedCount;
+              const isDemoStar1 = isDemonstrating && idx === 0;
+              const isDemoStar2 = isDemonstrating && idx === 1;
 
               return (
                 <div
                   key={node.id}
-                  className={`constellation-star-node ${isConnected ? 'connected' : ''} ${isTarget ? 'target' : ''}`}
+                  className={`constellation-star-node ${isConnected ? 'connected' : ''} ${isTarget ? 'target' : ''} ${isFuture ? 'future' : ''} ${isDemoStar1 || (isDemoStar2 && demoT > 0.8) ? 'step-focus' : ''}`}
                   style={{ left: `${node.x}vw`, top: `${node.y}vh` }}
                   onClick={() => handleStarClick(idx)}
                 >
                   <div className="constellation-star-core" />
+                  {(isDemoStar1 || (isDemoStar2 && demoT > 0.8)) && <div className="constellation-focus-ring" />}
                   {isTarget && <div className="constellation-hint-ring" />}
                 </div>
               );
