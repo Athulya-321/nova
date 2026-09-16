@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { useNova, AppModes } from '../../context/NovaContext';
+import '../../styles/slideAnimations.css';
 
 // Nova's complete illustrated origin storybook (Chapters 1 to 7)
 const storySlides = [
@@ -17,27 +18,65 @@ const storySlides = [
 export default function StoryExperience() {
   const { setAppMode } = useNova();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [targetSlide, setTargetSlide] = useState(null);
+  const [turnDirection, setTurnDirection] = useState(null); // 'next' | 'prev' | null
+  const [isAnimating, setIsAnimating] = useState(false);
 
+  // Turn page forward (Next)
   const next = useCallback(() => {
-    setCurrentSlide(prev => {
-      if (prev < storySlides.length - 1) {
-        return prev + 1;
-      }
-      return prev;
-    });
-  }, []);
+    if (isAnimating) return;
+    if (currentSlide < storySlides.length - 1) {
+      setTargetSlide(currentSlide + 1);
+      setTurnDirection('next');
+      setIsAnimating(true);
+    }
+  }, [currentSlide, isAnimating]);
 
+  // Turn page backward (Previous)
   const prev = useCallback(() => {
-    setCurrentSlide(p => Math.max(p - 1, 0));
-  }, []);
+    if (isAnimating) return;
+    if (currentSlide > 0) {
+      setTargetSlide(currentSlide - 1);
+      setTurnDirection('prev');
+      setIsAnimating(true);
+    }
+  }, [currentSlide, isAnimating]);
+
+  // Jump to specific chapter via indicator dots
+  const jumpToSlide = useCallback((index) => {
+    if (isAnimating || index === currentSlide) return;
+    setTargetSlide(index);
+    setTurnDirection(index > currentSlide ? 'next' : 'prev');
+    setIsAnimating(true);
+  }, [currentSlide, isAnimating]);
 
   const closeStory = useCallback(() => {
     setAppMode(AppModes.HOME);
   }, [setAppMode]);
 
+  // Complete page-turn transition
+  const handleAnimationEnd = useCallback(() => {
+    if (targetSlide !== null) {
+      setCurrentSlide(targetSlide);
+    }
+    setTargetSlide(null);
+    setTurnDirection(null);
+    setIsAnimating(false);
+  }, [targetSlide]);
+
+  // Safe fallback timer ensuring navigation is always unlocked
+  useEffect(() => {
+    if (!isAnimating) return;
+    const timer = setTimeout(() => {
+      handleAnimationEnd();
+    }, 920);
+    return () => clearTimeout(timer);
+  }, [isAnimating, handleAnimationEnd]);
+
   // Keyboard navigation support
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (isAnimating) return;
       if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'd' || e.key === 'D') {
         if (currentSlide === storySlides.length - 1) {
           closeStory();
@@ -52,11 +91,14 @@ export default function StoryExperience() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [next, prev, closeStory, currentSlide]);
+  }, [next, prev, closeStory, currentSlide, isAnimating]);
 
   const slide = storySlides[currentSlide];
   const isFirstSlide = currentSlide === 0;
   const isLastSlide = currentSlide === storySlides.length - 1;
+
+  // Active page number to show in indicators (show target while turning)
+  const activeDisplayIndex = isAnimating && targetSlide !== null ? targetSlide : currentSlide;
 
   return (
     <div 
@@ -135,120 +177,158 @@ export default function StoryExperience() {
           justifyContent: 'center'
         }}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`slide-${slide.id}`}
-            initial={{ opacity: 0, scale: 0.985 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.985 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(125, 226, 255, 0.12)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              background: '#04030a'
-            }}
-          >
-            {/* The Pure Illustrated Storybook Slide (WebP) */}
-            <img
-              src={slide.src}
-              alt={slide.title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                display: 'block',
-                pointerEvents: 'none'
-              }}
-              draggable={false}
-            />
+        {/* Real 3D Book Viewport */}
+        <div className="book-viewport">
+          {/* Subtle central spine shadow */}
+          <div className="book-spine-crease" />
 
-            {/* Clickable Left Half to go Previous */}
-            {!isFirstSlide && (
-              <div
-                onClick={prev}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '25%',
-                  height: '100%',
-                  cursor: 'pointer',
-                  zIndex: 20
-                }}
-                title="Click left side to go back"
-              />
-            )}
+          {isAnimating ? (
+            <>
+              {/* Stationary Underneath Left Half */}
+              <div className="book-page-half left">
+                <img 
+                  src={storySlides[turnDirection === 'next' ? currentSlide : targetSlide].src} 
+                  alt="Left Page Spread" 
+                  draggable={false} 
+                />
+              </div>
 
-            {/* Clickable Right Half to go Next */}
-            {!isLastSlide && (
-              <div
-                onClick={next}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: '25%',
-                  height: '100%',
-                  cursor: 'pointer',
-                  zIndex: 20
-                }}
-                title="Click right side to go forward"
-              />
-            )}
+              {/* Stationary Underneath Right Half */}
+              <div className="book-page-half right">
+                <img 
+                  src={storySlides[turnDirection === 'next' ? targetSlide : currentSlide].src} 
+                  alt="Right Page Spread" 
+                  draggable={false} 
+                />
+              </div>
 
-            {/* Interactive 'Close the Story' button on Slide 7 */}
-            {isLastSlide && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(125, 226, 255, 0.6)' }}
-                whileTap={{ scale: 0.96 }}
-                onClick={closeStory}
-                style={{
-                  position: 'absolute',
-                  bottom: '3.6%',
-                  right: '2.4%',
-                  zIndex: 30,
-                  background: 'rgba(15, 24, 60, 0.85)',
-                  border: '1.5px solid rgba(125, 226, 255, 0.7)',
-                  color: '#fff',
-                  padding: '9px 24px',
-                  borderRadius: '24px',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '0.95rem',
-                  letterSpacing: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(125, 226, 255, 0.4)'
-                }}
+              {/* Dynamic Cast Shadows on Stationary Pages */}
+              <div className={`book-cast-shadow ${turnDirection === 'next' ? 'right' : 'left'}`} />
+              <div className={`book-cast-shadow ${turnDirection === 'next' ? 'left' : 'right'}`} />
+
+              {/* 3D Realistic Turning Leaf (rotates around spine) */}
+              <div 
+                className={`book-turning-leaf turning-${turnDirection}`}
+                onAnimationEnd={handleAnimationEnd}
               >
-                <span>Close the Story</span>
-                <ChevronRight size={18} />
-              </motion.button>
-            )}
-          </motion.div>
-        </AnimatePresence>
+                {/* Front face of turning page (current right illustrated page) */}
+                <div className="leaf-face front">
+                  <img 
+                    src={storySlides[turnDirection === 'next' ? currentSlide : targetSlide].src} 
+                    alt="Turning Page Front" 
+                    draggable={false} 
+                  />
+                  <div className="leaf-shadow" />
+                </div>
+
+                {/* Back face of turning page (incoming left page) */}
+                <div className="leaf-face back">
+                  <img 
+                    src={storySlides[turnDirection === 'next' ? targetSlide : currentSlide].src} 
+                    alt="Turning Page Back" 
+                    draggable={false} 
+                  />
+                  <div className="leaf-shadow" />
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Stationary Idle Open Book */
+            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+              <img
+                src={slide.src}
+                alt={slide.title}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  display: 'block',
+                  pointerEvents: 'none'
+                }}
+                draggable={false}
+              />
+
+              {/* Clickable Left 28% to turn page back */}
+              {!isFirstSlide && (
+                <div
+                  onClick={prev}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '28%',
+                    height: '100%',
+                    cursor: 'pointer',
+                    zIndex: 20
+                  }}
+                  title="Click left page to turn back"
+                />
+              )}
+
+              {/* Clickable Right 28% to turn page forward */}
+              {!isLastSlide && (
+                <div
+                  onClick={next}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: '28%',
+                    height: '100%',
+                    cursor: 'pointer',
+                    zIndex: 20
+                  }}
+                  title="Click right page to turn forward"
+                />
+              )}
+
+              {/* Interactive 'Close the Story' button on Slide 7 */}
+              {isLastSlide && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(125, 226, 255, 0.6)' }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={closeStory}
+                  style={{
+                    position: 'absolute',
+                    bottom: '3.6%',
+                    right: '2.4%',
+                    zIndex: 30,
+                    background: 'rgba(15, 24, 60, 0.85)',
+                    border: '1.5px solid rgba(125, 226, 255, 0.7)',
+                    color: '#fff',
+                    padding: '9px 24px',
+                    borderRadius: '24px',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '0.95rem',
+                    letterSpacing: '1px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(125, 226, 255, 0.4)'
+                  }}
+                >
+                  <span>Close the Story</span>
+                  <ChevronRight size={18} />
+                </motion.button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Floating Side Arrow - Previous */}
         <button
           onClick={prev}
-          disabled={isFirstSlide}
+          disabled={isFirstSlide || isAnimating}
           style={{
             ...floatingNavBtnStyle,
             left: '-70px',
-            opacity: isFirstSlide ? 0 : 1,
-            pointerEvents: isFirstSlide ? 'none' : 'auto'
+            opacity: isFirstSlide ? 0 : isAnimating ? 0.4 : 1,
+            pointerEvents: isFirstSlide || isAnimating ? 'none' : 'auto',
+            cursor: isAnimating ? 'wait' : 'pointer'
           }}
           aria-label="Previous Chapter"
           title="Previous Chapter"
@@ -259,11 +339,13 @@ export default function StoryExperience() {
         {/* Floating Side Arrow - Next / Close */}
         <button
           onClick={isLastSlide ? closeStory : next}
+          disabled={isAnimating}
           style={{
             ...floatingNavBtnStyle,
             right: '-70px',
-            opacity: 1,
-            pointerEvents: 'auto'
+            opacity: isAnimating ? 0.4 : 1,
+            pointerEvents: isAnimating ? 'none' : 'auto',
+            cursor: isAnimating ? 'wait' : 'pointer'
           }}
           aria-label={isLastSlide ? "Close Story" : "Next Chapter"}
           title={isLastSlide ? "Close Story" : "Next Chapter"}
@@ -296,21 +378,21 @@ export default function StoryExperience() {
           fontFamily: 'var(--font-primary)',
           marginRight: '4px'
         }}>
-          CHAPTER {currentSlide + 1} OF {storySlides.length}
+          CHAPTER {activeDisplayIndex + 1} OF {storySlides.length}
         </span>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           {storySlides.map((_, i) => (
             <div
               key={`dot-${i}`}
-              onClick={() => setCurrentSlide(i)}
+              onClick={() => jumpToSlide(i)}
               style={{
-                width: i === currentSlide ? '24px' : '8px',
+                width: i === activeDisplayIndex ? '24px' : '8px',
                 height: '8px',
                 borderRadius: '4px',
-                cursor: 'pointer',
-                background: i === currentSlide ? 'var(--nova-core)' : 'rgba(255, 255, 255, 0.25)',
-                boxShadow: i === currentSlide ? '0 0 12px var(--nova-glow)' : 'none',
+                cursor: isAnimating ? 'default' : 'pointer',
+                background: i === activeDisplayIndex ? 'var(--nova-core)' : 'rgba(255, 255, 255, 0.25)',
+                boxShadow: i === activeDisplayIndex ? '0 0 12px var(--nova-glow)' : 'none',
                 transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
               title={`Jump to Chapter ${i + 1}`}

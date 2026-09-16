@@ -504,3 +504,353 @@
   animation: s2FloorRotate 22s linear infinite;
   filter: blur(6px);
 }
+
+/* ==========================================================================
+   3D REALISTIC BOOK PAGE TURN TRANSITION
+   ========================================================================== */
+
+.book-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 2400px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+  user-select: none;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(125, 226, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #04030a;
+}
+
+/* Base static page halves */
+.book-page-half {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.book-page-half.left {
+  left: 0;
+  border-radius: 12px 0 0 12px;
+}
+
+.book-page-half.right {
+  left: 50%;
+  border-radius: 0 12px 12px 0;
+}
+
+.book-page-half img {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 200%;
+  max-width: none;
+  object-fit: fill;
+  display: block;
+}
+
+.book-page-half.left img {
+  left: 0;
+}
+
+.book-page-half.right img {
+  left: -100%;
+}
+
+/* Center spine gutter crease */
+.book-spine-crease {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 28px;
+  height: 100%;
+  transform: translateX(-50%);
+  background: linear-gradient(to right, 
+    rgba(0, 0, 0, 0) 0%, 
+    rgba(0, 0, 0, 0.28) 45%, 
+    rgba(0, 0, 0, 0.38) 50%, 
+    rgba(0, 0, 0, 0.28) 55%, 
+    rgba(0, 0, 0, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 15;
+}
+
+/* Turning 3D Leaf */
+.book-turning-leaf {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  z-index: 30;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Next animation: 0deg -> -180deg */
+.book-turning-leaf.turning-next {
+  animation: turnPageNext 880ms cubic-bezier(0.32, 0.0, 0.18, 1) forwards;
+}
+
+/* Prev animation: -180deg -> 0deg */
+.book-turning-leaf.turning-prev {
+  animation: turnPagePrev 880ms cubic-bezier(0.32, 0.0, 0.18, 1) forwards;
+}
+
+@keyframes turnPageNext {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(-180deg);
+  }
+}
+
+@keyframes turnPagePrev {
+  0% {
+    transform: rotateY(-180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+/* Leaf Faces */
+.leaf-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.leaf-face.front {
+  transform: rotateY(0deg);
+  border-radius: 0 12px 12px 0;
+}
+
+.leaf-face.front img {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  max-width: none;
+  object-fit: fill;
+  display: block;
+}
+
+.leaf-face.back {
+  transform: rotateY(180deg);
+  border-radius: 12px 0 0 12px;
+}
+
+.leaf-face.back img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  max-width: none;
+  object-fit: fill;
+  display: block;
+}
+
+/* Paper Edge Highlight - warm golden starlight gleam */
+.leaf-face.front::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255, 240, 200, 0.5) 0%, rgba(255, 230, 170, 0.85) 50%, rgba(255, 240, 200, 0.5) 100%);
+  box-shadow: 1px 0 6px rgba(255, 230, 160, 0.45);
+  pointer-events: none;
+}
+
+.leaf-face.back::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255, 240, 200, 0.5) 0%, rgba(255, 230, 170, 0.85) 50%, rgba(255, 240, 200, 0.5) 100%);
+  box-shadow: -1px 0 6px rgba(255, 230, 160, 0.45);
+  pointer-events: none;
+}
+
+/* Dynamic Shadow on turning leaf */
+.leaf-shadow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.turning-next .leaf-face.front .leaf-shadow {
+  animation: frontShadowNext 880ms cubic-bezier(0.32, 0.0, 0.18, 1) forwards;
+}
+
+.turning-next .leaf-face.back .leaf-shadow {
+  animation: backShadowNext 880ms cubic-bezier(0.32, 0.0, 0.18, 1) forwards;
+}
+
+.turning-prev .leaf-face.front .leaf-shadow {
+  animation: frontShadowPrev 880ms cubic-bezier(0.32, 0.0, 0.18, 1) forwards;
+}
+
+.turning-prev .leaf-face.back .leaf-shadow {
+  animation: backShadowPrev 880ms cubic-bezier(0.32, 0.0, 0.18, 1) forwards;
+}
+
+@keyframes frontShadowNext {
+  0% {
+    opacity: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 100%);
+  }
+  45% {
+    opacity: 0.6;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.65) 100%);
+  }
+  50% {
+    opacity: 0.7;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes backShadowNext {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.7;
+    background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+  }
+  55% {
+    opacity: 0.6;
+    background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.38) 60%, rgba(0,0,0,0.6) 100%);
+  }
+  100% {
+    opacity: 0;
+    background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 100%);
+  }
+}
+
+@keyframes frontShadowPrev {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.7;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+  }
+  55% {
+    opacity: 0.6;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.38) 60%, rgba(0,0,0,0.6) 100%);
+  }
+  100% {
+    opacity: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 100%);
+  }
+}
+
+@keyframes backShadowPrev {
+  0% {
+    opacity: 0;
+    background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 100%);
+  }
+  45% {
+    opacity: 0.6;
+    background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.65) 100%);
+  }
+  50% {
+    opacity: 0.7;
+    background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Cast shadow on the stationary page */
+.book-cast-shadow {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.book-cast-shadow.right {
+  left: 50%;
+  width: 50%;
+  background: linear-gradient(to right, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0) 75%);
+}
+
+.book-cast-shadow.left {
+  left: 0;
+  width: 50%;
+  background: linear-gradient(to left, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0) 75%);
+}
+
+.turning-next .book-cast-shadow.right {
+  animation: castShadowRight 880ms cubic-bezier(0.32, 0.0, 0.18, 1) forwards;
+}
+
+.turning-next .book-cast-shadow.left {
+  animation: castShadowLeft 880ms cubic-bezier(0.32, 0.0, 0.18, 1) forwards;
+}
+
+.turning-prev .book-cast-shadow.right {
+  animation: castShadowLeft 880ms cubic-bezier(0.32, 0.0, 0.18, 1) reverse forwards;
+}
+
+.turning-prev .book-cast-shadow.left {
+  animation: castShadowRight 880ms cubic-bezier(0.32, 0.0, 0.18, 1) reverse forwards;
+}
+
+@keyframes castShadowRight {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.7;
+  }
+  65% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes castShadowLeft {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.15;
+  }
+  80% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
