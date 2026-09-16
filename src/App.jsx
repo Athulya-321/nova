@@ -47,8 +47,8 @@ function AppRenderer() {
       {appMode === AppModes.STARWAYS && <Starways isExploreMode={true} />}
       {appMode === AppModes.HELP_SIGNALS && <HelpSignals />}
       
-      {/* Cinematic Meteor Emergency Event */}
-      <MeteorEmergency />
+      {/* Cinematic Meteor Emergency Event (only when not reading Meet Nova storybook) */}
+      {appMode !== AppModes.MEET_NOVA && <MeteorEmergency />}
     </div>
   );
 }

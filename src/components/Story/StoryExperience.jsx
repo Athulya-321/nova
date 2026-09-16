@@ -1,292 +1,344 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
-import SlideAnimationLayer from './SlideAnimationLayer';
-import FullScreenStoryCanvas from './FullScreenStoryCanvas';
+import { ChevronRight, ChevronLeft, X } from 'lucide-react';
+import { useNova, AppModes } from '../../context/NovaContext';
 
+// Nova's complete illustrated origin storybook (Chapters 1 to 7)
 const storySlides = [
-  { 
-    id: 1, 
-    bg: '/slide 1.webp',
-    tag: 'THE WORLD OF VEYRA',
-    title: 'THE FALLEN HOME',
-    text: 'On a distant world orbiting a dying star, lived the Starforged.'
-  },
-  { 
-    id: 2, 
-    bg: '/slide 2.webp',
-    tag: 'THE GUARDIAN AND KAELEN',
-    title: 'A CURIOUS SPIRIT',
-    text: 'Among them was Nova, curious and adventurous, dreaming of exploring new worlds.'
-  },
-  { 
-    id: 3, 
-    bg: '/slide 3.webp',
-    tag: 'THE FALL OF VEYRA',
-    title: 'THE MENTOR\'S LESSON',
-    text: 'Nova was trained by a wise guardian who taught her that true strength is in compassion.'
-  },
-  { 
-    id: 4, 
-    bg: '/slide 4.webp',
-    tag: 'THE LAST LIGHT OF AURELIS',
-    title: 'THE SHADOW REACHES',
-    text: 'One day, a powerful enemy attacked, seeking to steal the energy of their dying star.'
-  },
-  { 
-    id: 5, 
-    bg: '/slide 5.webp',
-    tag: 'THE GUARDIAN WITHOUT A HOME',
-    title: 'THE LAST LIGHT',
-    text: 'As the world collapsed, Nova’s mentor transferred the last fragment of his Star Core into her.'
-  },
-  { 
-    id: 6, 
-    bg: '/slide 6.webp',
-    tag: 'EARTH, THE WORLD SHE CHOSE',
-    title: 'THE JOURNEY BEGINS',
-    text: 'Alone but not defeated, she traveled from planet to planet, bringing hope to places others had forgotten.'
-  },
-  { 
-    id: 7, 
-    bg: '/slide 7.webp',
-    tag: 'NOVA TODAY',
-    title: 'GUARDIAN OF THE STARWAYS',
-    text: 'Eventually, Nova discovered Earth. Now, she listens and watches over those who feel lost or alone.'
-  }
+  { id: 1, src: '/slide 1.webp', title: 'Chapter 1: The World of Veyra' },
+  { id: 2, src: '/slide 2.webp', title: 'Chapter 2: The Guardian and Kaelen' },
+  { id: 3, src: '/slide 3.webp', title: 'Chapter 3: The Fall of Veyra' },
+  { id: 4, src: '/slide 4.webp', title: 'Chapter 4: The Last Light of Aurelis' },
+  { id: 5, src: '/slide 5.webp', title: 'Chapter 5: The Guardian Without a Home' },
+  { id: 6, src: '/slide 6.webp', title: 'Chapter 6: Earth - The World She Chose' },
+  { id: 7, src: '/slide 7.webp', title: 'Chapter 7: Nova Today - The Starbound Guardian' }
 ];
 
 export default function StoryExperience() {
+  const { setAppMode } = useNova();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const next = useCallback(() => {
-    setCurrentSlide(prev => Math.min(prev + 1, storySlides.length - 1));
+    setCurrentSlide(prev => {
+      if (prev < storySlides.length - 1) {
+        return prev + 1;
+      }
+      return prev;
+    });
   }, []);
 
   const prev = useCallback(() => {
     setCurrentSlide(p => Math.max(p - 1, 0));
   }, []);
 
+  const closeStory = useCallback(() => {
+    setAppMode(AppModes.HOME);
+  }, [setAppMode]);
+
   // Keyboard navigation support
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'Space') {
-        next();
-      } else if (e.key === 'ArrowLeft') {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'd' || e.key === 'D') {
+        if (currentSlide === storySlides.length - 1) {
+          closeStory();
+        } else {
+          next();
+        }
+      } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         prev();
+      } else if (e.key === 'Escape') {
+        closeStory();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [next, prev]);
+  }, [next, prev, closeStory, currentSlide]);
 
   const slide = storySlides[currentSlide];
+  const isFirstSlide = currentSlide === 0;
+  const isLastSlide = currentSlide === storySlides.length - 1;
 
   return (
-    <div className="fullscreen-story-container">
-      
-      {/* Full-Screen Crossfading Slide Viewport */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`slide-${slide.id}`}
-          initial={{ opacity: 0, scale: 1.01 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.995 }}
-          transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-          className="fullscreen-slide"
-          style={{
-            backgroundImage: `url('${slide.bg}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        >
-          {/* Subtle Ambient DOM Animation Layer (Atmosphere, Aurelis Pulse, Floating Islands, Mist) */}
-          <SlideAnimationLayer slideId={slide.id} />
-
-          {/* Full-Screen Precise Procedural Canvas (Exact Star Twinkles, Waterfalls, Embers) */}
-          <FullScreenStoryCanvas slideId={slide.id} />
-
-          {/* Cinematic Bottom Gradient for Content Contrast */}
-          <div style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            width: '100%',
-            height: '50%',
-            background: 'linear-gradient(to top, rgba(3, 2, 10, 0.92) 0%, rgba(3, 2, 10, 0.55) 45%, rgba(3, 2, 10, 0) 100%)',
-            zIndex: 10,
-            pointerEvents: 'none'
-          }} />
-
-          {/* Top Vignette */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '22%',
-            background: 'linear-gradient(to bottom, rgba(3, 2, 10, 0.55) 0%, rgba(3, 2, 10, 0) 100%)',
-            zIndex: 10,
-            pointerEvents: 'none'
-          }} />
-
-          {/* Story Text Box Overlay */}
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.12 }}
-            style={{
-              position: 'absolute',
-              bottom: '12%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '90%',
-              maxWidth: '820px',
-              zIndex: 15,
-              textAlign: 'center',
-              padding: '24px 36px',
-              background: 'rgba(8, 6, 22, 0.48)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              borderRadius: '24px',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(120, 210, 255, 0.12)',
-              pointerEvents: 'none'
-            }}
-          >
-            <div style={{
-              fontSize: '0.85rem',
-              color: 'var(--nova-glow)',
-              textTransform: 'uppercase',
-              letterSpacing: '4px',
-              marginBottom: '8px',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px'
-            }}>
-              <span>SLIDE {currentSlide + 1} OF {storySlides.length}</span>
-              <span style={{ opacity: 0.4 }}>•</span>
-              <span>{slide.tag}</span>
-            </div>
-
-            <h2 style={{
-              fontSize: '2.3rem',
-              color: 'var(--nova-white)',
-              marginBottom: '10px',
-              letterSpacing: '3px',
-              fontFamily: 'var(--font-display)',
-              textShadow: '0 4px 20px rgba(0,0,0,0.9)'
-            }}>
-              {slide.title}
-            </h2>
-
-            <p style={{
-              fontSize: '1.18rem',
-              color: 'rgba(255, 255, 255, 0.95)',
-              lineHeight: 1.6,
-              fontFamily: 'var(--font-primary)',
-              textShadow: '0 2px 10px rgba(0,0,0,0.9)',
-              margin: 0
-            }}>
-              {slide.text}
-            </p>
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Floating Side Navigation Buttons */}
+    <div 
+      className="fullscreen-story-container"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 60,
+        background: 'radial-gradient(ellipse at center, #0b0c1b 0%, #03020a 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        userSelect: 'none',
+        paddingTop: '60px',
+        paddingBottom: '50px'
+      }}
+    >
+      {/* Top Bar Quick Exit */}
       <div style={{
         position: 'absolute',
-        top: '50%',
-        left: 0,
-        width: '100%',
+        top: '24px',
+        right: '40px',
+        zIndex: 70,
         display: 'flex',
-        justifyContent: 'space-between',
-        padding: '0 40px',
-        transform: 'translateY(-50%)',
-        zIndex: 25,
-        pointerEvents: 'none'
+        alignItems: 'center',
+        gap: '12px'
       }}>
-        <button 
-          onClick={prev} 
-          disabled={currentSlide === 0} 
-          style={{ 
-            ...btnStyle, 
-            opacity: currentSlide === 0 ? 0 : 1, 
-            pointerEvents: currentSlide === 0 ? 'none' : 'auto' 
+        <button
+          onClick={closeStory}
+          style={{
+            background: 'rgba(15, 18, 35, 0.7)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            color: 'var(--text-dim)',
+            borderRadius: '20px',
+            padding: '8px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '13px',
+            fontFamily: 'var(--font-primary)',
+            letterSpacing: '1px',
+            cursor: 'pointer',
+            backdropFilter: 'blur(12px)',
+            transition: 'all 0.25s ease'
           }}
-          aria-label="Previous Slide"
-        >
-          <ChevronLeft size={36}/>
-        </button>
-
-        <button 
-          onClick={next} 
-          disabled={currentSlide === storySlides.length - 1} 
-          style={{ 
-            ...btnStyle, 
-            opacity: currentSlide === storySlides.length - 1 ? 0 : 1, 
-            pointerEvents: currentSlide === storySlides.length - 1 ? 'none' : 'auto' 
+          onMouseEnter={e => {
+            e.currentTarget.style.color = '#fff';
+            e.currentTarget.style.borderColor = 'var(--nova-glow)';
+            e.currentTarget.style.boxShadow = '0 0 15px rgba(125, 226, 255, 0.3)';
           }}
-          aria-label="Next Slide"
+          onMouseLeave={e => {
+            e.currentTarget.style.color = 'var(--text-dim)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          title="Return to Home (Esc)"
         >
-          <ChevronRight size={36}/>
+          <X size={16} />
+          <span>Exit Story</span>
         </button>
       </div>
 
-      {/* Bottom Progress Pill Indicators */}
+      {/* Main Illustrated Book Spread Display */}
+      <div 
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: 'min(92vw, calc((100vh - 140px) * 1.5))',
+          height: 'min(calc(100vh - 140px), calc(92vw / 1.5))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`slide-${slide.id}`}
+            initial={{ opacity: 0, scale: 0.985 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.985 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(125, 226, 255, 0.12)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: '#04030a'
+            }}
+          >
+            {/* The Pure Illustrated Storybook Slide (WebP) */}
+            <img
+              src={slide.src}
+              alt={slide.title}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                display: 'block',
+                pointerEvents: 'none'
+              }}
+              draggable={false}
+            />
+
+            {/* Clickable Left Half to go Previous */}
+            {!isFirstSlide && (
+              <div
+                onClick={prev}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '25%',
+                  height: '100%',
+                  cursor: 'pointer',
+                  zIndex: 20
+                }}
+                title="Click left side to go back"
+              />
+            )}
+
+            {/* Clickable Right Half to go Next */}
+            {!isLastSlide && (
+              <div
+                onClick={next}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: '25%',
+                  height: '100%',
+                  cursor: 'pointer',
+                  zIndex: 20
+                }}
+                title="Click right side to go forward"
+              />
+            )}
+
+            {/* Interactive 'Close the Story' button on Slide 7 */}
+            {isLastSlide && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(125, 226, 255, 0.6)' }}
+                whileTap={{ scale: 0.96 }}
+                onClick={closeStory}
+                style={{
+                  position: 'absolute',
+                  bottom: '3.6%',
+                  right: '2.4%',
+                  zIndex: 30,
+                  background: 'rgba(15, 24, 60, 0.85)',
+                  border: '1.5px solid rgba(125, 226, 255, 0.7)',
+                  color: '#fff',
+                  padding: '9px 24px',
+                  borderRadius: '24px',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '0.95rem',
+                  letterSpacing: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(125, 226, 255, 0.4)'
+                }}
+              >
+                <span>Close the Story</span>
+                <ChevronRight size={18} />
+              </motion.button>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Floating Side Arrow - Previous */}
+        <button
+          onClick={prev}
+          disabled={isFirstSlide}
+          style={{
+            ...floatingNavBtnStyle,
+            left: '-70px',
+            opacity: isFirstSlide ? 0 : 1,
+            pointerEvents: isFirstSlide ? 'none' : 'auto'
+          }}
+          aria-label="Previous Chapter"
+          title="Previous Chapter"
+        >
+          <ChevronLeft size={30} />
+        </button>
+
+        {/* Floating Side Arrow - Next */}
+        <button
+          onClick={isLastSlide ? closeStory : next}
+          style={{
+            ...floatingNavBtnStyle,
+            right: '-70px',
+            opacity: 1,
+            pointerEvents: 'auto'
+          }}
+          aria-label={isLastSlide ? "Close Story" : "Next Chapter"}
+          title={isLastSlide ? "Close Story" : "Next Chapter"}
+        >
+          <ChevronRight size={30} />
+        </button>
+      </div>
+
+      {/* Bottom Chapter Progress Indicators */}
       <div style={{
         position: 'absolute',
-        bottom: '3.8%',
+        bottom: '18px',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 25,
+        zIndex: 30,
         display: 'flex',
-        gap: '12px',
         alignItems: 'center',
-        padding: '8px 18px',
-        background: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
+        gap: '14px',
+        padding: '6px 18px',
+        background: 'rgba(6, 8, 20, 0.65)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         borderRadius: '30px',
-        border: '1px solid rgba(255, 255, 255, 0.08)'
+        border: '1px solid rgba(255, 255, 255, 0.1)'
       }}>
-        {storySlides.map((_, i) => (
-          <div 
-            key={`dot-${i}`} 
-            onClick={() => setCurrentSlide(i)}
-            style={{ 
-              width: i === currentSlide ? '28px' : '10px',
-              height: '10px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              background: i === currentSlide ? 'var(--nova-core)' : 'rgba(255,255,255,0.25)',
-              boxShadow: i === currentSlide ? '0 0 15px var(--nova-glow)' : 'none',
-              transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
-            }} 
-            title={`Go to slide ${i + 1}`}
-          />
-        ))}
+        <span style={{
+          fontSize: '11px',
+          color: 'var(--text-dim)',
+          letterSpacing: '1px',
+          fontFamily: 'var(--font-primary)',
+          marginRight: '4px'
+        }}>
+          CHAPTER {currentSlide + 1} OF {storySlides.length}
+        </span>
+
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {storySlides.map((_, i) => (
+            <div
+              key={`dot-${i}`}
+              onClick={() => setCurrentSlide(i)}
+              style={{
+                width: i === currentSlide ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                background: i === currentSlide ? 'var(--nova-core)' : 'rgba(255, 255, 255, 0.25)',
+                boxShadow: i === currentSlide ? '0 0 12px var(--nova-glow)' : 'none',
+                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+              title={`Jump to Chapter ${i + 1}`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-const btnStyle = {
-  background: 'rgba(15, 12, 35, 0.55)',
-  border: '1px solid rgba(255, 255, 255, 0.25)',
-  color: 'var(--nova-white)',
+const floatingNavBtnStyle = {
+  position: 'absolute',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  zIndex: 35,
+  background: 'rgba(12, 16, 32, 0.65)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  color: '#fff',
   borderRadius: '50%',
-  width: '64px',
-  height: '64px',
+  width: '54px',
+  height: '54px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  transition: 'all 0.3s ease',
-  boxShadow: '0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(120, 210, 255, 0.15)'
+  backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
+  transition: 'all 0.25s ease',
+  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(120, 210, 255, 0.15)'
 };
