@@ -25,7 +25,7 @@ export default function Navigation() {
     NovaStates.NOVA_LANDS
   ].includes(novaState);
 
-  if (isOpening) return null;
+  if (isOpening || appMode === AppModes.MEET_NOVA) return null;
 
   const navItems = [
     { mode: AppModes.HOME, icon: Home, label: 'Home' },

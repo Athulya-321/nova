@@ -115,16 +115,14 @@ export default function StoryExperience() {
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        userSelect: 'none',
-        paddingTop: '60px',
-        paddingBottom: '50px'
+        userSelect: 'none'
       }}
     >
       {/* Top Bar Quick Exit */}
       <div style={{
         position: 'absolute',
         top: '24px',
-        right: '40px',
+        right: '28px',
         zIndex: 70,
         display: 'flex',
         alignItems: 'center',
@@ -133,8 +131,8 @@ export default function StoryExperience() {
         <button
           onClick={closeStory}
           style={{
-            background: 'rgba(15, 18, 35, 0.7)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
+            background: 'rgba(15, 18, 35, 0.75)',
+            border: '1px solid rgba(255, 255, 255, 0.22)',
             color: 'var(--text-dim)',
             borderRadius: '20px',
             padding: '8px 16px',
@@ -146,7 +144,8 @@ export default function StoryExperience() {
             letterSpacing: '1px',
             cursor: 'pointer',
             backdropFilter: 'blur(12px)',
-            transition: 'all 0.25s ease'
+            transition: 'all 0.25s ease',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.5)'
           }}
           onMouseEnter={e => {
             e.currentTarget.style.color = '#fff';
@@ -155,8 +154,8 @@ export default function StoryExperience() {
           }}
           onMouseLeave={e => {
             e.currentTarget.style.color = 'var(--text-dim)';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
-            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.22)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.5)';
           }}
           title="Return to Home (Esc)"
         >
@@ -165,16 +164,14 @@ export default function StoryExperience() {
         </button>
       </div>
 
-      {/* Main Illustrated Book Spread Display */}
+      {/* Full-Screen Illustrated Book Spread Display */}
       <div 
         style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: 'min(92vw, calc((100vh - 140px) * 1.5))',
-          height: 'min(calc(100vh - 140px), calc(92vw / 1.5))',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+          position: 'absolute',
+          inset: 0,
+          width: '100vw',
+          height: '100vh',
+          overflow: 'hidden'
         }}
       >
         {/* Real 3D Book Viewport */}
@@ -234,21 +231,22 @@ export default function StoryExperience() {
             </>
           ) : (
             /* Stationary Idle Open Book */
-            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
               <img
                 src={slide.src}
                 alt={slide.title}
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
+                  width: '100vw',
+                  height: '100vh',
+                  objectFit: 'cover',
+                  objectPosition: 'center center',
                   display: 'block',
                   pointerEvents: 'none'
                 }}
                 draggable={false}
               />
 
-              {/* Clickable Left 28% to turn page back */}
+              {/* Clickable Left 25% to turn page back */}
               {!isFirstSlide && (
                 <div
                   onClick={prev}
@@ -256,8 +254,8 @@ export default function StoryExperience() {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    width: '28%',
-                    height: '100%',
+                    width: '25vw',
+                    height: '100vh',
                     cursor: 'pointer',
                     zIndex: 20
                   }}
@@ -265,7 +263,7 @@ export default function StoryExperience() {
                 />
               )}
 
-              {/* Clickable Right 28% to turn page forward */}
+              {/* Clickable Right 25% to turn page forward */}
               {!isLastSlide && (
                 <div
                   onClick={next}
@@ -273,8 +271,8 @@ export default function StoryExperience() {
                     position: 'absolute',
                     top: 0,
                     right: 0,
-                    width: '28%',
-                    height: '100%',
+                    width: '25vw',
+                    height: '100vh',
                     cursor: 'pointer',
                     zIndex: 20
                   }}
@@ -292,13 +290,13 @@ export default function StoryExperience() {
                   onClick={closeStory}
                   style={{
                     position: 'absolute',
-                    bottom: '3.6%',
-                    right: '2.4%',
+                    bottom: '28px',
+                    right: '28px',
                     zIndex: 30,
-                    background: 'rgba(15, 24, 60, 0.85)',
-                    border: '1.5px solid rgba(125, 226, 255, 0.7)',
+                    background: 'rgba(15, 24, 60, 0.88)',
+                    border: '1.5px solid rgba(125, 226, 255, 0.75)',
                     color: '#fff',
-                    padding: '9px 24px',
+                    padding: '10px 26px',
                     borderRadius: '24px',
                     cursor: 'pointer',
                     fontFamily: 'var(--font-display)',
@@ -307,7 +305,7 @@ export default function StoryExperience() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    backdropFilter: 'blur(10px)',
+                    backdropFilter: 'blur(12px)',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(125, 226, 255, 0.4)'
                   }}
                 >
@@ -325,7 +323,7 @@ export default function StoryExperience() {
           disabled={isFirstSlide || isAnimating}
           style={{
             ...floatingNavBtnStyle,
-            left: '-70px',
+            left: '28px',
             opacity: isFirstSlide ? 0 : isAnimating ? 0.4 : 1,
             pointerEvents: isFirstSlide || isAnimating ? 'none' : 'auto',
             cursor: isAnimating ? 'wait' : 'pointer'
@@ -333,7 +331,7 @@ export default function StoryExperience() {
           aria-label="Previous Chapter"
           title="Previous Chapter"
         >
-          <ChevronLeft size={30} />
+          <ChevronLeft size={32} />
         </button>
 
         {/* Floating Side Arrow - Next / Close */}
@@ -342,7 +340,7 @@ export default function StoryExperience() {
           disabled={isAnimating}
           style={{
             ...floatingNavBtnStyle,
-            right: '-70px',
+            right: '28px',
             opacity: isAnimating ? 0.4 : 1,
             pointerEvents: isAnimating ? 'none' : 'auto',
             cursor: isAnimating ? 'wait' : 'pointer'
@@ -350,14 +348,14 @@ export default function StoryExperience() {
           aria-label={isLastSlide ? "Close Story" : "Next Chapter"}
           title={isLastSlide ? "Close Story" : "Next Chapter"}
         >
-          {isLastSlide ? <X size={26} /> : <ChevronRight size={30} />}
+          {isLastSlide ? <X size={26} /> : <ChevronRight size={32} />}
         </button>
       </div>
 
       {/* Bottom Chapter Progress Indicators */}
       <div style={{
         position: 'absolute',
-        bottom: '18px',
+        bottom: '22px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 30,
