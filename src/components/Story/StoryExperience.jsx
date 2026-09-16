@@ -5,13 +5,13 @@ import { useNova, AppModes } from '../../context/NovaContext';
 
 // Nova's complete illustrated origin storybook (Chapters 1 to 7)
 const storySlides = [
-  { id: 1, src: '/slide 1.webp', title: 'Chapter 1: The World of Veyra' },
-  { id: 2, src: '/slide 2.webp', title: 'Chapter 2: The Guardian and Kaelen' },
-  { id: 3, src: '/slide 3.webp', title: 'Chapter 3: The Fall of Veyra' },
-  { id: 4, src: '/slide 4.webp', title: 'Chapter 4: The Last Light of Aurelis' },
-  { id: 5, src: '/slide 5.webp', title: 'Chapter 5: The Guardian Without a Home' },
-  { id: 6, src: '/slide 6.webp', title: 'Chapter 6: Earth - The World She Chose' },
-  { id: 7, src: '/slide 7.webp', title: 'Chapter 7: Nova Today - The Starbound Guardian' }
+  { id: 1, src: '/slide1.0.webp', title: 'Chapter 1: The World of Veyra' },
+  { id: 2, src: '/slide2.0.webp', title: 'Chapter 2: The Guardian and Kaelen' },
+  { id: 3, src: '/slide3.0.webp', title: 'Chapter 3: The Fall of Veyra' },
+  { id: 4, src: '/slide4.0.webp', title: 'Chapter 4: The Last Light of Aurelis' },
+  { id: 5, src: '/slide5.0.webp', title: 'Chapter 5: The Guardian Without a Home' },
+  { id: 6, src: '/slide6.0.webp', title: 'Chapter 6: Earth - The World She Chose' },
+  { id: 7, src: '/slide7.0.webp', title: 'Chapter 7: Nova Today - The Starbound Guardian' }
 ];
 
 export default function StoryExperience() {
@@ -256,7 +256,7 @@ export default function StoryExperience() {
           <ChevronLeft size={30} />
         </button>
 
-        {/* Floating Side Arrow - Next */}
+        {/* Floating Side Arrow - Next / Close */}
         <button
           onClick={isLastSlide ? closeStory : next}
           style={{
@@ -268,7 +268,7 @@ export default function StoryExperience() {
           aria-label={isLastSlide ? "Close Story" : "Next Chapter"}
           title={isLastSlide ? "Close Story" : "Next Chapter"}
         >
-          <ChevronRight size={30} />
+          {isLastSlide ? <X size={26} /> : <ChevronRight size={30} />}
         </button>
       </div>
 
