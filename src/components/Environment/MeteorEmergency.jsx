@@ -239,41 +239,47 @@ export default function MeteorEmergency() {
     // Disallow clicks if countdown expired during active challenge
     if (countdown <= 0) return;
 
-    if (nodeIndex === connectedCount) {
-      const nextCount = connectedCount + 1;
+    // Connect next star in sequence (or allow completing with Star 5 / loop back to Star 1)
+    const isTarget = nodeIndex === connectedCount;
+    const isClosingStep = connectedCount === 4 && (nodeIndex === 4 || nodeIndex === 0);
+
+    if (isTarget || isClosingStep) {
+      const nextCount = isClosingStep ? 5 : connectedCount + 1;
       setConnectedCount(nextCount);
 
-      // Subsequent star clicks (Star 1 through Star 5) during active challenge
-      if (nextCount === CONSTELLATION_NODES.length) {
-        // SUCCESS: Stop countdown immediately & alter trajectory
+      // All 5 stars connected: full Guardian Shield constellation complete!
+      if (nextCount >= CONSTELLATION_NODES.length) {
         if (typeof window !== 'undefined') {
           localStorage.setItem('meteorMissionOutcome', 'protected');
         }
-        isDivertingRef.current = true;
-        setIsDiverting(true);
 
-        // Record exact frozen position for diversion curve
-        if (missionStartTimeRef.current) {
-          const elapsed = Math.max(0, performance.now() - missionStartTimeRef.current);
-          const progress = Math.min(elapsed / 10000, 1.0);
-          const width = window.innerWidth;
-          const height = window.innerHeight;
-          const startX = width * 0.08;
-          const startY = height * 0.15;
-          const earthX = width * 0.82;
-          const earthY = height * 0.52;
-          divertFromPosRef.current = {
-            x: startX + (earthX - startX) * progress,
-            y: startY + (earthY - startY) * progress
-          };
-        }
-
-        setNovaDialogue("You did it! Trajectory altered.");
-        
-        // Begin "The Starways Remember You" recognition sequence after trajectory completes
+        // Brief delay so traveler clearly sees the full shield glowing complete before meteor turns
         setTimeout(() => {
-          startRecognitionSequence();
-        }, 2800);
+          isDivertingRef.current = true;
+          setIsDiverting(true);
+
+          if (missionStartTimeRef.current) {
+            const elapsed = Math.max(0, performance.now() - missionStartTimeRef.current);
+            const progress = Math.min(elapsed / 10000, 1.0);
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const startX = width * 0.08;
+            const startY = height * 0.15;
+            const earthX = width * 0.82;
+            const earthY = height * 0.52;
+            divertFromPosRef.current = {
+              x: startX + (earthX - startX) * progress,
+              y: startY + (earthY - startY) * progress
+            };
+          }
+
+          setNovaDialogue("You did it! Trajectory altered.");
+          
+          // Begin "The Starways Remember You" recognition sequence after trajectory completes
+          setTimeout(() => {
+            startRecognitionSequence();
+          }, 2800);
+        }, 500);
       }
     }
   };
@@ -789,36 +795,38 @@ export default function MeteorEmergency() {
                 if (i === 0 || i > connectedCount) return null;
                 const prevNode = CONSTELLATION_NODES[i - 1];
                 return (
-                  <motion.line
+                  <line
                     key={`line-${i}`}
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 0.35, ease: 'easeOut' }}
                     x1={`${prevNode.x}vw`}
                     y1={`${prevNode.y}vh`}
                     x2={`${node.x}vw`}
                     y2={`${node.y}vh`}
-                    stroke="rgba(125, 226, 255, 0.95)"
-                    strokeWidth="3"
+                    stroke="#7de2ff"
+                    strokeWidth="3.5"
                     strokeLinecap="round"
                     filter="url(#starGlow)"
+                    style={{
+                      filter: 'drop-shadow(0 0 10px #7de2ff) drop-shadow(0 0 20px rgba(125, 226, 255, 0.9))',
+                      transition: 'all 0.25s ease-out'
+                    }}
                   />
                 );
               })}
               {!isDemonstrating && connectedCount >= 5 && (
-                <motion.line
+                <line
                   key="line-close"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
                   x1={`${CONSTELLATION_NODES[4].x}vw`}
                   y1={`${CONSTELLATION_NODES[4].y}vh`}
                   x2={`${CONSTELLATION_NODES[0].x}vw`}
                   y2={`${CONSTELLATION_NODES[0].y}vh`}
-                  stroke="rgba(125, 226, 255, 0.95)"
-                  strokeWidth="3"
+                  stroke="#7de2ff"
+                  strokeWidth="3.5"
                   strokeLinecap="round"
                   filter="url(#starGlow)"
+                  style={{
+                    filter: 'drop-shadow(0 0 10px #7de2ff) drop-shadow(0 0 20px rgba(125, 226, 255, 0.9))',
+                    transition: 'all 0.25s ease-out'
+                  }}
                 />
               )}
             </svg>

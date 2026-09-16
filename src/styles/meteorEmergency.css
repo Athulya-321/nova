@@ -194,10 +194,10 @@ body.meteor-subtle-shake {
 .meteor-mission-container {
   position: fixed;
   inset: 0;
-  z-index: 96;
-  background: radial-gradient(circle at 50% 50%, rgba(10, 8, 28, 0.92) 0%, rgba(4, 3, 12, 0.98) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  z-index: 9999;
+  background: radial-gradient(circle at 50% 45%, #0e0a2e 0%, #050414 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -205,18 +205,18 @@ body.meteor-subtle-shake {
 
 .meteor-top-hud {
   position: absolute;
-  top: 30px;
+  top: 22px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 25px;
-  background: rgba(12, 10, 32, 0.75);
-  border: 1px solid rgba(255, 100, 80, 0.35);
-  padding: 12px 28px;
+  background: rgba(12, 10, 32, 0.9);
+  border: 1px solid rgba(255, 100, 80, 0.45);
+  padding: 10px 26px;
   border-radius: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  z-index: 30;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 80, 60, 0.15);
+  z-index: 40;
   max-width: 90vw;
   box-sizing: border-box;
 }
@@ -250,12 +250,12 @@ body.meteor-subtle-shake {
 /* Constellation Visual Mission Instructions Header */
 .constellation-instruction-header {
   position: absolute;
-  top: 92px;
+  top: 86px;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
   pointer-events: none;
-  z-index: 30;
+  z-index: 40;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -410,8 +410,8 @@ body.meteor-subtle-shake {
 /* Constellation interactive star node */
 .constellation-star-node {
   position: absolute;
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -419,21 +419,22 @@ body.meteor-subtle-shake {
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  z-index: 25;
+  z-index: 30;
 }
 
 .constellation-star-core {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 0 12px rgba(140, 220, 255, 0.9);
   transition: all 0.3s ease;
+  pointer-events: none;
 }
 
 .constellation-star-node.target .constellation-star-core {
   background: #ffffff;
-  box-shadow: 0 0 20px rgba(125, 226, 255, 1), 0 0 35px rgba(125, 226, 255, 0.85);
+  box-shadow: 0 0 22px rgba(125, 226, 255, 1), 0 0 40px rgba(125, 226, 255, 0.9);
   animation: starTargetPulse 1.2s ease-in-out infinite alternate;
 }
 
@@ -443,9 +444,9 @@ body.meteor-subtle-shake {
 }
 
 .constellation-star-node.future .constellation-star-core {
-  background: rgba(200, 225, 255, 0.45);
-  box-shadow: 0 0 8px rgba(140, 190, 255, 0.3);
-  opacity: 0.65;
+  background: rgba(200, 225, 255, 0.55);
+  box-shadow: 0 0 8px rgba(140, 190, 255, 0.4);
+  opacity: 0.75;
 }
 
 @keyframes starTargetPulse {
@@ -455,11 +456,12 @@ body.meteor-subtle-shake {
 
 .constellation-hint-ring {
   position: absolute;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 1.5px dashed rgba(125, 226, 255, 0.75);
+  border: 2px dashed rgba(125, 226, 255, 0.9);
   animation: rotateSlow 8s linear infinite;
+  pointer-events: none;
 }
 
 /* Special glowing circular highlight for Phase 1 Step 1 & Step 2 focus stars */

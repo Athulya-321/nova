@@ -19,6 +19,17 @@ export default function HelpSignals() {
     grievance: visitorData.problem || visitorData.grievance || ''
   });
 
+  // Keep form data continuously synchronized in real-time as Nova collects details in conversation
+  React.useEffect(() => {
+    setFormData(prev => ({
+      name: visitorData.name !== undefined && visitorData.name !== '' ? visitorData.name : prev.name,
+      age: visitorData.age !== undefined && visitorData.age !== '' ? visitorData.age : prev.age,
+      location: visitorData.location !== undefined && visitorData.location !== '' ? visitorData.location : prev.location,
+      email: visitorData.email !== undefined && visitorData.email !== '' ? visitorData.email : prev.email,
+      grievance: visitorData.problem || visitorData.grievance || prev.grievance
+    }));
+  }, [visitorData]);
+
   const sendIconRef = React.useRef(null);
   const [iconOrigin, setIconOrigin] = useState({ x: 'calc(50% - 134px)', y: '76%' });
 
@@ -85,18 +96,34 @@ export default function HelpSignals() {
     setIsPopupOpen(false); // Detach / close popup gracefully as signal shoots out
 
     try {
-      const response = await fetch('http://localhost:3001/api/submit-grievance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId: conversationId || ('direct_signal_' + Date.now()),
-          name: formData.name.trim(),
-          age: formData.age.trim(),
-          location: formData.location.trim(),
-          email: formData.email.trim(),
-          grievance: formData.grievance?.trim() || 'Urgent assistance requested across the Starways.'
-        })
-      });
+      let response;
+      try {
+        response = await fetch('/api/submit-grievance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: conversationId || ('direct_signal_' + Date.now()),
+            name: formData.name.trim(),
+            age: formData.age.trim(),
+            location: formData.location.trim(),
+            email: formData.email.trim(),
+            grievance: formData.grievance?.trim() || 'Urgent assistance requested across the Starways.'
+          })
+        });
+      } catch (e) {
+        response = await fetch('http://localhost:3001/api/submit-grievance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: conversationId || ('direct_signal_' + Date.now()),
+            name: formData.name.trim(),
+            age: formData.age.trim(),
+            location: formData.location.trim(),
+            email: formData.email.trim(),
+            grievance: formData.grievance?.trim() || 'Urgent assistance requested across the Starways.'
+          })
+        });
+      }
 
       const data = await response.json();
       if (!response.ok || !data.success) {

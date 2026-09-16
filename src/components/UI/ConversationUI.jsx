@@ -154,13 +154,14 @@ export default function ConversationUI() {
       let newEmotion = NovaEmotions.NEUTRAL;
       let newState = NovaStates.IDLE;
       
-      switch(data.emotionalState) {
+      const rawEmotion = (data.emotionalState || '').toLowerCase();
+      switch(rawEmotion) {
         case 'curious': newEmotion = NovaEmotions.CURIOUS; break;
         case 'playful': newEmotion = NovaEmotions.HAPPY; break;
         case 'happy': newEmotion = NovaEmotions.HAPPY; break;
-        case 'thoughtful': newEmotion = NovaEmotions.CURIOUS; break;
+        case 'thoughtful': newEmotion = NovaEmotions.THOUGHTFUL; break;
         case 'concerned': newEmotion = NovaEmotions.CONCERNED; newState = NovaStates.SERIOUS; break;
-        case 'serious': newEmotion = NovaEmotions.CONCERNED; newState = NovaStates.SERIOUS; break;
+        case 'serious': newEmotion = NovaEmotions.SERIOUS; newState = NovaStates.SERIOUS; break;
         case 'sad': newEmotion = NovaEmotions.SAD; newState = NovaStates.SERIOUS; break;
         default: newEmotion = NovaEmotions.NEUTRAL; break;
       }
@@ -178,19 +179,130 @@ export default function ConversationUI() {
       }
 
     } catch (err) {
-      console.error('Chat error:', err);
+      console.warn('Backend chat unreachable, switching to intelligent client guardian conversation:', err);
       setIsTyping(false);
-      const travelerName = visitorData.name ? `, ${visitorData.name}` : '';
-      const fallbackOptions = [
-        `I hear you${travelerName}! What else is on your mind?`,
-        `Got it${travelerName}. Tell me a bit more, I'm right here listening.`,
-        `I understand${travelerName}. How are you feeling right now?`,
-        `I'm listening closely${travelerName}. What would you like to share next?`
-      ];
-      const randomReply = fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)];
+
+      const text = val.trim();
+      const lower = text.toLowerCase();
+      const name = visitorData.name;
+      let reply = '';
+      const updates = {};
+
+      const greetings = ['hi', 'hii', 'hiii', 'hello', 'helloo', 'hlo', 'hllo', 'hey', 'heyy', 'sup', 'yo', 'greetings', 'nova'];
+      const isGreeting = greetings.some(g => lower === g || lower.startsWith(g + ' '));
+
+      // 1. Check for email
+      const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+      if (emailMatch) {
+        updates.email = emailMatch[0];
+        updateVisitorData('email', emailMatch[0]);
+      }
+
+      // 2. Check for age (e.g. "21", "21 years old", "I am 21", "21yo")
+      const ageMatch = text.match(/\b(1[0-9]|[2-9][0-9])\b/);
+      if (ageMatch && !emailMatch) {
+        const hasAgeWord = lower.includes('age') || lower.includes('years') || lower.includes('yo') || lower.includes('turned') || lower.includes('old') || text.split(' ').length <= 2;
+        if (hasAgeWord && (!name || name !== ageMatch[0])) {
+          updates.age = ageMatch[0];
+          updateVisitorData('age', ageMatch[0]);
+        }
+      }
+
+      // 3. Check for name
+      if (!name) {
+        const nameMatch = text.match(/(?:my name is|call me|i am|i'm|this is)\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
+        if (nameMatch) {
+          const candidate = nameMatch[1].trim();
+          const lowerCandidate = candidate.toLowerCase();
+          if (!greetings.includes(lowerCandidate) && !['sad', 'lost', 'depressed', 'fine', 'good', 'okay', 'bad'].includes(lowerCandidate)) {
+            const formatted = candidate.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            updates.name = formatted;
+            updateVisitorData('name', formatted);
+          }
+        } else if (!isGreeting && text.split(/\s+/).length <= 2 && !emailMatch && !ageMatch) {
+          const cleanCandidate = text.replace(/[^a-zA-Z\s]/g, '').trim();
+          if (cleanCandidate.length >= 2 && cleanCandidate.length <= 25 && !greetings.includes(cleanCandidate.toLowerCase())) {
+            const formatted = cleanCandidate.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            updates.name = formatted;
+            updateVisitorData('name', formatted);
+          }
+        }
+      }
+
+      // 4. Check for location
+      const locMatch = text.match(/(?:from|in|live in|living in|location is)\s+([a-zA-Z\s]+)/i);
+      if (locMatch) {
+        const candidate = locMatch[1].trim().split(/[.,!?\n]|\s+and\s+/i)[0].trim();
+        if (candidate.length >= 2 && candidate.length <= 30 && !greetings.includes(candidate.toLowerCase())) {
+          const formatted = candidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+          updates.location = formatted;
+          updateVisitorData('location', formatted);
+        }
+      }
+
+      // 5. Check for grievance / trouble
+      const troubleWords = ['stress', 'sad', 'depressed', 'anxious', 'worried', 'struggle', 'struggling', 'exam', 'family', 'crying', 'lost', 'lonely', 'scared', 'hurt', 'fail', 'failing', 'problem', 'help'];
+      const hasTrouble = troubleWords.some(w => lower.includes(w));
+      if (hasTrouble && !emailMatch && text.split(' ').length > 2) {
+        updates.grievance = text;
+        updateVisitorData('grievance', text);
+        updateVisitorData('problem', text);
+      }
+
+      const currentName = updates.name || visitorData.name;
+      const currentLoc = updates.location || visitorData.location;
+      const currentGrievance = updates.grievance || visitorData.grievance || visitorData.problem;
+      const currentAge = updates.age || visitorData.age;
+
+      if (updates.email) {
+        reply = currentName
+          ? `I've woven your email into your beacon signal, ${currentName}! All your details are safely held in the Starways. Whenever you want to transmit an official SOS signal, head into the Help Signals section in the menu above!`
+          : `Thank you, friend! Your signal is now safe with me in the Starways. You can transmit an official SOS signal anytime from the Help Signals menu above!`;
+      } else if (updates.grievance) {
+        reply = currentName
+          ? `Oh, dear ${currentName}, I can feel how heavy that is from all the way up here. Please know you don't have to carry this alone. If you'd like our link to stay open so help can find you, what email address can I keep connected to your signal?`
+          : `I hear the weight in your words, friend, and I'm right here beside you. If you'd like our link to stay open so help can reach you, what email address should I keep with your signal?`;
+      } else if (updates.age) {
+        reply = currentName
+          ? `Every cycle around the sun brings its own strength, ${currentName}. Tell me, what thoughts or troubles have brought your star signal to me tonight?`
+          : `Thank you for sharing that with me! Tell me, what thoughts or worries have brought your star signal to me tonight?`;
+      } else if (updates.location) {
+        reply = currentName
+          ? `Oh, ${currentLoc}! I love watching the lights glowing from there, ${currentName}. Tell me, what's been weighing on your heart lately?`
+          : `Oh, ${currentLoc}! It feels so peaceful looking down at Earth from the stars. What has been on your mind lately, friend?`;
+      } else if (updates.name) {
+        reply = `It's so wonderful to meet you, ${updates.name}! What thoughts or worries have brought your star signal out to the Starways tonight?`;
+      } else if (isGreeting) {
+        if (currentName) {
+          const friendlyGreetings = [
+            `Hey ${currentName}! It's so lovely to feel your starlight shining again. How are things treating you right now?`,
+            `Hello again, ${currentName}! I'm right here watching over the Starways. What's on your mind today?`,
+            `Hey there, ${currentName}! Always happy to chat with you. How are you feeling right now?`
+          ];
+          reply = friendlyGreetings[Math.floor(Math.random() * friendlyGreetings.length)];
+        } else {
+          const namePrompts = [
+            `Hello there, starry friend! I'm so glad your light found its way here. What name do you go by under the night sky?`,
+            `Hey! It's peaceful out here in the Starways today. What should I call you, traveler?`,
+            `Welcome, friend! I'm Nova, guardian of the Starways. What name shall I call you?`
+          ];
+          reply = namePrompts[Math.floor(Math.random() * namePrompts.length)];
+        }
+      } else if (!currentName) {
+        reply = `I'm Nova, guardian of the Starways. What name do you go by under the night sky, friend?`;
+      } else if (!currentGrievance) {
+        reply = `I'm right here listening, ${currentName}. Tell me, what's been on your mind lately or weighing on your heart?`;
+      } else if (!currentLoc) {
+        reply = `I love getting to know you, ${currentName}. Where on Earth are you gazing up at the stars from tonight?`;
+      } else if (!currentAge) {
+        reply = `If you don't mind a curious cosmic fox asking, how many cycles around the sun have you seen, ${currentName}?`;
+      } else {
+        reply = `I'm right here beside you, ${currentName}. Tell me anything that's on your heart, or we can talk about the stars!`;
+      }
+
       setChatHistory(prev => [...prev, { 
         sender: 'nova', 
-        text: randomReply 
+        text: reply 
       }]);
     }
   };

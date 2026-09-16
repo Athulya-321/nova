@@ -51,11 +51,12 @@ app.post('/api/chat', async (req, res) => {
     // Call Gemini
     const geminiResponse = await generateNovaResponse(message, session.history, session.profile);
 
-    // Merge profile updates
+    // Merge profile updates safely without wiping out previously known fields
     if (geminiResponse.profileUpdates) {
       Object.keys(geminiResponse.profileUpdates).forEach(key => {
-        if (geminiResponse.profileUpdates[key] !== null) {
-          session.profile[key] = geminiResponse.profileUpdates[key];
+        const val = geminiResponse.profileUpdates[key];
+        if (val !== null && val !== undefined && String(val).trim() !== '') {
+          session.profile[key] = String(val).trim();
         }
       });
     }
