@@ -4,6 +4,7 @@ import { ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { useNova, AppModes } from '../../context/NovaContext';
 import SlideAnimationLayer from './SlideAnimationLayer';
 import StoryArtworkStage from './StoryArtworkStage';
+import { preloadStoryImages } from '../../services/storyPreloader';
 import '../../styles/slideAnimations.css';
 
 // Nova's complete illustrated origin storybook (Chapters 1 to 7)
@@ -23,6 +24,11 @@ export default function StoryExperience() {
   const [targetSlide, setTargetSlide] = useState(null);
   const [turnDirection, setTurnDirection] = useState(null); // 'next' | 'prev' | null
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // Ensure story images are preloaded and decoded
+  useEffect(() => {
+    preloadStoryImages();
+  }, []);
 
   // Turn page forward (Next)
   const next = useCallback(() => {
@@ -188,6 +194,8 @@ export default function StoryExperience() {
                 <img 
                   src={storySlides[turnDirection === 'next' ? currentSlide : targetSlide].src} 
                   alt="Left Page Spread" 
+                  loading="eager"
+                  decoding="async"
                   draggable={false} 
                 />
               </div>
@@ -197,6 +205,8 @@ export default function StoryExperience() {
                 <img 
                   src={storySlides[turnDirection === 'next' ? targetSlide : currentSlide].src} 
                   alt="Right Page Spread" 
+                  loading="eager"
+                  decoding="async"
                   draggable={false} 
                 />
               </div>
@@ -215,6 +225,8 @@ export default function StoryExperience() {
                   <img 
                     src={storySlides[turnDirection === 'next' ? currentSlide : targetSlide].src} 
                     alt="Turning Page Front" 
+                    loading="eager"
+                    decoding="async"
                     draggable={false} 
                   />
                   <div className="leaf-shadow" />
@@ -225,6 +237,8 @@ export default function StoryExperience() {
                   <img 
                     src={storySlides[turnDirection === 'next' ? targetSlide : currentSlide].src} 
                     alt="Turning Page Back" 
+                    loading="eager"
+                    decoding="async"
                     draggable={false} 
                   />
                   <div className="leaf-shadow" />
@@ -237,6 +251,8 @@ export default function StoryExperience() {
               <img
                 src={slide.src}
                 alt={slide.title}
+                loading="eager"
+                decoding="async"
                 style={{
                   width: '100vw',
                   height: '100vh',

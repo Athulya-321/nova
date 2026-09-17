@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNova, AppModes } from './context/NovaContext';
+import { preloadStoryImages } from './services/storyPreloader';
 import CinematicOpening from './components/Environment/CinematicOpening';
 import Navigation from './components/UI/Navigation';
 import Starways from './components/Environment/Starways';
@@ -33,6 +34,11 @@ function MainExperience() {
 
 function AppRenderer() {
   const { appMode } = useNova();
+
+  useEffect(() => {
+    // Silently preload and GPU-decode all story slides in background
+    preloadStoryImages();
+  }, []);
   
   return (
     <div className="app-container">
