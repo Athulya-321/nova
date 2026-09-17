@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, ChevronLeft, X } from 'lucide-react';
 import { useNova, AppModes } from '../../context/NovaContext';
+import SlideAnimationLayer from './SlideAnimationLayer';
+import StoryArtworkStage from './StoryArtworkStage';
 import '../../styles/slideAnimations.css';
 
 // Nova's complete illustrated origin storybook (Chapters 1 to 7)
@@ -245,6 +247,11 @@ export default function StoryExperience() {
                 }}
                 draggable={false}
               />
+
+              {/* Transparent Cinematic Story Animation Layer (locked to illustration stage) */}
+              <StoryArtworkStage>
+                <SlideAnimationLayer slideId={slide.id} />
+              </StoryArtworkStage>
 
               {/* Clickable Left 25% to turn page back */}
               {!isFirstSlide && (
