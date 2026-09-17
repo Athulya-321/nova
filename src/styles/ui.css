@@ -84,3 +84,47 @@
   color: var(--text-dim);
   cursor: not-allowed;
 }
+
+/* =========================================================================
+   BEACON RADAR TELEMETRY CSS (from chat_and_emergency_dispatch_blueprint.md)
+   ========================================================================= */
+
+/* Sonar Radar Waves */
+.beacon-ring {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(125, 226, 255, 0.7);
+  animation: beaconSonarWave 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  pointer-events: none;
+}
+.beacon-ring.ring-2 { animation-delay: 0.8s; }
+.beacon-ring.ring-3 { animation-delay: 1.6s; }
+
+@keyframes beaconSonarWave {
+  0% { transform: scale(0.8); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* 360-degree Conical Radar Sweep */
+.beacon-sweep-radar {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(125, 226, 255, 0.45) 60deg, transparent 65deg);
+  animation: radarSweepRotate 2s linear infinite;
+  pointer-events: none;
+}
+@keyframes radarSweepRotate {
+  100% { transform: rotate(360deg); }
+}
+
+/* Radar Pulse Core */
+.beacon-core-pulse {
+  animation: beaconCoreGlow 1.5s ease-in-out infinite alternate;
+}
+@keyframes beaconCoreGlow {
+  0% { transform: scale(0.95); filter: drop-shadow(0 0 10px rgba(125, 226, 255, 0.5)); }
+  100% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(170, 59, 255, 0.8)); }
+}
+

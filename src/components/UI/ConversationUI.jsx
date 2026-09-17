@@ -92,9 +92,9 @@ export default function ConversationUI() {
     setIsTyping(true);
     
     try {
-      let response;
+      let data = null;
       try {
-        response = await fetch('/api/chat', {
+        const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -107,28 +107,86 @@ export default function ConversationUI() {
             }))
           })
         });
+        if (response.ok) {
+          data = await response.json();
+        }
       } catch (e) {
-        // Fallback to direct backend URL if proxy is unavailable
-        response = await fetch('http://localhost:3001/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            conversationId,
-            message: val,
-            visitorProfile: visitorData,
-            conversationHistory: chatHistory.map(msg => ({
-              role: msg.sender === 'nova' ? 'model' : 'user',
-              text: msg.text
-            }))
-          })
-        });
+        console.warn('Vite proxy /api/chat unavailable, attempting secondary route:', e);
       }
 
-      if (!response.ok) {
-        throw new Error('Signal interference');
+      // Secondary check: port 3001
+      if (!data) {
+        try {
+          const response = await fetch('http://localhost:3001/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              conversationId,
+              message: val,
+              visitorProfile: visitorData,
+              conversationHistory: chatHistory.map(msg => ({
+                role: msg.sender === 'nova' ? 'model' : 'user',
+                text: msg.text
+              }))
+            })
+          });
+          if (response.ok) {
+            data = await response.json();
+          }
+        } catch (e2) {
+          console.warn('Backend server on 3001 unavailable, engaging direct OpenRouter GPT-4o fallback:', e2);
+        }
       }
 
-      const data = await response.json();
+      // Direct OpenRouter GPT-4o fallback if both local routes are unavailable
+      if (!data) {
+        try {
+          const clientApiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';
+          const openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${clientApiKey}`,
+              'HTTP-Referer': 'https://nova-nu-nine.vercel.app',
+              'X-Title': 'Nova',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'openai/gpt-4o',
+              max_tokens: 600,
+              temperature: 0.75,
+              messages: [
+                {
+                  role: 'system',
+                  content: "You are Nova, The Starbound Guardian. You are a warm, glowing cosmic fox friend and celestial guardian watching over Earth from the high Starways. Your voice is warm, soothing, intimate, and poetic yet simple. Speak in 2 to 3 natural sentences like a true friend under the open night sky listening with all your heart."
+                },
+                ...chatHistory.slice(-6).map(msg => ({
+                  role: msg.sender === 'nova' ? 'assistant' : 'user',
+                  content: msg.text
+                })),
+                { role: 'user', content: val }
+              ]
+            })
+          });
+
+          if (openRouterRes.ok) {
+            const orData = await openRouterRes.json();
+            const reply = orData.choices?.[0]?.message?.content?.trim() || "I hear your star whisper across the night sky, traveler. I'm right here with you.";
+            data = {
+              reply,
+              profileUpdates: {},
+              emotionalState: 'welcoming',
+              visitorMood: 'neutral',
+              conversationIntent: 'general'
+            };
+          }
+        } catch (orErr) {
+          console.error('Direct OpenRouter fallback error:', orErr);
+        }
+      }
+
+      if (!data) {
+        throw new Error('Signal interference in the Starways');
+      }
       
       // Update Context Profile immediately (e.g. name globally, location, age, email, problem)
       if (data.profileUpdates) {

@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { generateNovaResponse } from './services/geminiService.js';
+import { generateNovaResponse } from './services/openrouterService.js';
 import { sendGrievanceEmailWithNodeMailer } from './services/nodemailerService.js';
 
 dotenv.config({ path: '.env' }); // Assuming server is run from server/ directory but .env is in root
@@ -48,13 +48,13 @@ app.post('/api/chat', async (req, res) => {
     // Add user message to history
     session.history.push({ role: 'user', text: message });
 
-    // Call Gemini
-    const geminiResponse = await generateNovaResponse(message, session.history, session.profile);
+    // Call OpenRouter Multi-Threaded Engine (with Gemini fallback)
+    const novaResponse = await generateNovaResponse(message, session.history, session.profile);
 
     // Merge profile updates safely without wiping out previously known fields
-    if (geminiResponse.profileUpdates) {
-      Object.keys(geminiResponse.profileUpdates).forEach(key => {
-        const val = geminiResponse.profileUpdates[key];
+    if (novaResponse.profileUpdates) {
+      Object.keys(novaResponse.profileUpdates).forEach(key => {
+        const val = novaResponse.profileUpdates[key];
         if (val !== null && val !== undefined && String(val).trim() !== '') {
           session.profile[key] = String(val).trim();
         }
@@ -62,15 +62,15 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Add Nova's response to history
-    session.history.push({ role: 'model', text: geminiResponse.reply });
+    session.history.push({ role: 'model', text: novaResponse.reply });
 
     res.json({
-      reply: geminiResponse.reply,
+      reply: novaResponse.reply,
       profileUpdates: session.profile,
-      emotionalState: geminiResponse.emotionalState || 'neutral',
-      visitorMood: geminiResponse.visitorMood || 'neutral',
-      conversationIntent: geminiResponse.conversationIntent || 'general',
-      needsFollowUp: geminiResponse.needsFollowUp || false
+      emotionalState: novaResponse.emotionalState || 'neutral',
+      visitorMood: novaResponse.visitorMood || 'neutral',
+      conversationIntent: novaResponse.conversationIntent || 'general',
+      needsFollowUp: novaResponse.needsFollowUp || false
     });
 
   } catch (error) {

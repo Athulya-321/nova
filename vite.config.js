@@ -16,17 +16,17 @@ function novaApiPlugin() {
           req.on('end', async () => {
             try {
               const { message, visitorProfile, conversationHistory } = JSON.parse(body || '{}');
-              const { generateNovaResponse } = await import('./server/services/geminiService.js');
+              const { generateNovaResponse } = await import('./server/services/openrouterService.js');
               
               const history = Array.isArray(conversationHistory) ? [...conversationHistory] : [];
               const profile = { ...(visitorProfile || {}) };
               
-              const geminiResponse = await generateNovaResponse(message, history, profile);
+              const novaResponse = await generateNovaResponse(message, history, profile);
               
               // Merge profile updates safely
-              if (geminiResponse.profileUpdates) {
-                Object.keys(geminiResponse.profileUpdates).forEach(key => {
-                  const val = geminiResponse.profileUpdates[key];
+              if (novaResponse.profileUpdates) {
+                Object.keys(novaResponse.profileUpdates).forEach(key => {
+                  const val = novaResponse.profileUpdates[key];
                   if (val !== null && val !== undefined && String(val).trim() !== '') {
                     profile[key] = String(val).trim();
                   }
@@ -35,12 +35,12 @@ function novaApiPlugin() {
 
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({
-                reply: geminiResponse.reply,
+                reply: novaResponse.reply,
                 profileUpdates: profile,
-                emotionalState: geminiResponse.emotionalState || 'neutral',
-                visitorMood: geminiResponse.visitorMood || 'neutral',
-                conversationIntent: geminiResponse.conversationIntent || 'general',
-                needsFollowUp: geminiResponse.needsFollowUp || false
+                emotionalState: novaResponse.emotionalState || 'neutral',
+                visitorMood: novaResponse.visitorMood || 'neutral',
+                conversationIntent: novaResponse.conversationIntent || 'general',
+                needsFollowUp: novaResponse.needsFollowUp || false
               }));
             } catch (err) {
               console.error('Vite API /api/chat error:', err);

@@ -254,6 +254,11 @@ export async function sendGrievanceEmailWithNodeMailer(profile, submittedAt = ne
     to: adminEmail,
     replyTo: profile.email || adminEmail,
     subject: `🚨 [NOVA SIGNAL] Help Requested by ${visitorName}${visitorLoc}`,
+    headers: {
+      'X-Priority': '1',
+      'X-MSMail-Priority': 'High',
+      'Importance': 'high'
+    },
     text: `NOVA — NEW HELP SIGNAL
 ================================
 VISITOR INFORMATION
@@ -285,7 +290,72 @@ Destination: nova0hero@gmail.com
     })
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log(`[Nodemailer] Signal successfully beamed to ${adminEmail}! MessageId: ${info.messageId}`);
-  return { success: true, messageId: info.messageId };
+  const adminInfo = await transporter.sendMail(mailOptions);
+  console.log(`[Nodemailer] Signal successfully beamed to admin ${adminEmail}! MessageId: ${adminInfo.messageId}`);
+
+  // Automated Reassurance Dispatch to Visitor (Two-way dispatch from blueprint)
+  let visitorMessageId = null;
+  if (profile.email && profile.email.includes('@')) {
+    try {
+      const visitorMailOptions = {
+        from: `"Nova — Starbound Guardian" <${adminEmail}>`,
+        to: profile.email.trim(),
+        subject: `🌟 [SIGNAL LOCKED] Nova has received your message, ${visitorName}`,
+        html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { background-color: #06050e; font-family: 'Segoe UI', Arial, sans-serif; color: #e2e8f0; margin: 0; padding: 0; }
+    .wrap { max-width: 580px; margin: 25px auto; background: radial-gradient(circle at 50% 0%, #17153a 0%, #0b0a1a 100%); border: 1px solid rgba(125, 226, 255, 0.4); border-radius: 16px; overflow: hidden; box-shadow: 0 0 35px rgba(125, 226, 255, 0.25); }
+    .hdr { padding: 30px 25px; text-align: center; background: linear-gradient(180deg, rgba(125, 226, 255, 0.12) 0%, transparent 100%); border-bottom: 1px solid rgba(125, 226, 255, 0.2); }
+    .badge { display: inline-block; padding: 4px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #7de2ff; border: 1px solid rgba(125, 226, 255, 0.4); border-radius: 20px; background: rgba(125, 226, 255, 0.1); margin-bottom: 10px; }
+    .title { margin: 0; font-size: 22px; color: #ffffff; letter-spacing: 2px; }
+    .body { padding: 25px 30px; line-height: 1.6; color: #cbd5e1; font-size: 14px; }
+    .quote { border-left: 3px solid #7de2ff; background: rgba(125, 226, 255, 0.06); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 18px 0; font-style: italic; color: #e0f2fe; }
+    .meta { background: rgba(18, 16, 38, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 14px; margin-top: 18px; font-size: 12px; }
+    .ftr { text-align: center; padding: 20px; font-size: 11px; color: #64748b; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hdr">
+      <div class="badge">Starway Connection Locked</div>
+      <h1 class="title">I Hear Your Signal, ${visitorName}</h1>
+    </div>
+    <div class="body">
+      <p>Your transmission has reached me across the Starways. No matter how dark the sky may seem down on Earth, your star shines bright and you are not alone.</p>
+      <div class="quote">
+        "${profile.grievance || 'Your SOS signal has been registered in the Starways.'}"
+      </div>
+      <p>I have securely routed your signal to our dedicated earthbound guardians (<strong>${adminEmail}</strong>). We are reviewing your transmission with care and kindness.</p>
+      <div class="meta">
+        <div><strong>Coordinates:</strong> ${profile.location || 'Earth'}</div>
+        <div><strong>Timestamp:</strong> ${formattedDate} at ${formattedTime} (${timeZone})</div>
+        <div><strong>Frequency:</strong> 842.10 MHz (Nova Telemetry Network)</div>
+      </div>
+    </div>
+    <div class="ftr">
+      Nova — The Starbound Guardian • "Different worlds. Same dreams. One Starway."
+    </div>
+  </div>
+</body>
+</html>
+`
+      };
+
+      const visitorInfo = await transporter.sendMail(visitorMailOptions);
+      visitorMessageId = visitorInfo.messageId;
+      console.log(`[Nodemailer] Reassurance confirmation beamed to visitor ${profile.email}! MessageId: ${visitorMessageId}`);
+    } catch (visErr) {
+      console.warn('[Nodemailer] Visitor confirmation email non-fatal error:', visErr.message);
+    }
+  }
+
+  return { 
+    success: true, 
+    adminMessageId: adminInfo.messageId,
+    visitorMessageId 
+  };
 }
