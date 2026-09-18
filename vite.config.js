@@ -60,19 +60,33 @@ function novaApiPlugin() {
               const parsed = JSON.parse(body || '{}');
               const { sendGrievanceEmailWithNodeMailer } = await import('./server/services/nodemailerService.js');
               
+              const placeValue = String(parsed.place || parsed.location || '').trim();
+              parsed.place = placeValue;
+              parsed.location = placeValue;
+
               const missing = [];
               if (!parsed.name?.trim()) missing.push('name');
               if (!parsed.age?.trim()) missing.push('age');
-              if (!parsed.location?.trim()) missing.push('location');
-              if (!parsed.email?.trim()) missing.push('email');
+              if (!placeValue) missing.push('place / location');
+              if (!parsed.email?.trim()) missing.push('email address');
 
               if (missing.length > 0) {
                 res.statusCode = 422;
                 res.setHeader('Content-Type', 'application/json');
                 return res.end(JSON.stringify({
                   success: false,
-                  message: `Signal incomplete: Nova still requires your ${missing.join(', ')} before transmitting.`,
+                  message: `Signal incomplete: Nova requires your ${missing.join(', ')} before transmitting across the Starways. All details are mandatory.`,
                   missingFields: missing
+                }));
+              }
+
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(String(parsed.email).trim())) {
+                res.statusCode = 422;
+                res.setHeader('Content-Type', 'application/json');
+                return res.end(JSON.stringify({
+                  success: false,
+                  message: 'Invalid email address format. Please provide a valid email so Nova can send your copy signal.'
                 }));
               }
 

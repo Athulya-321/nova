@@ -103,24 +103,36 @@ app.post('/api/submit-grievance', async (req, res) => {
 
     // Merge any explicit fields passed in req.body into session profile
     const profile = session.profile || {};
-    ['name', 'age', 'location', 'email', 'grievance'].forEach(field => {
+    ['name', 'age', 'location', 'place', 'email', 'grievance'].forEach(field => {
       if (req.body[field]) {
         profile[field] = req.body[field];
       }
     });
 
-    // Verification check: ensure we have visitor's name, age, location, and email
+    const placeValue = String(profile.place || profile.location || '').trim();
+    profile.place = placeValue;
+    profile.location = placeValue;
+
+    // Verification check: ensure we have visitor's name, age, place, and email (all mandatory)
     const missingFields = [];
     if (!profile.name || !String(profile.name).trim()) missingFields.push('name');
     if (!profile.age || !String(profile.age).trim()) missingFields.push('age');
-    if (!profile.location || !String(profile.location).trim()) missingFields.push('location');
-    if (!profile.email || !String(profile.email).trim()) missingFields.push('email');
+    if (!placeValue) missingFields.push('place / location');
+    if (!profile.email || !String(profile.email).trim()) missingFields.push('email address');
 
     if (missingFields.length > 0) {
       return res.status(422).json({
         success: false,
-        message: `Signal incomplete: Nova still requires your ${missingFields.join(', ')} before transmitting across the Starways.`,
+        message: `Signal incomplete: Nova requires your ${missingFields.join(', ')} before transmitting across the Starways. All details are mandatory.`,
         missingFields
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(String(profile.email).trim())) {
+      return res.status(422).json({
+        success: false,
+        message: 'Invalid email address format. Please provide a valid email so Nova can send your copy signal.'
       });
     }
 

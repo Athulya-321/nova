@@ -19,19 +19,30 @@ export default async function handler(req, res) {
   }
 
   const payload = req.body || {};
-  const { name, age, location, email, grievance } = payload;
+  const { name, age, email, grievance } = payload;
+  const place = String(payload.place || payload.location || '').trim();
+  payload.place = place;
+  payload.location = place;
 
   const missing = [];
   if (!name?.trim()) missing.push('name');
   if (!age?.trim()) missing.push('age');
-  if (!location?.trim()) missing.push('location');
-  if (!email?.trim()) missing.push('email');
+  if (!place) missing.push('place / location');
+  if (!email?.trim()) missing.push('email address');
 
   if (missing.length > 0) {
     return res.status(422).json({
       success: false,
-      message: `Signal incomplete: Nova still requires your ${missing.join(', ')} before transmitting.`,
+      message: `Signal incomplete: Nova requires your ${missing.join(', ')} before transmitting across the Starways. All details are mandatory.`,
       missingFields: missing
+    });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(String(email).trim())) {
+    return res.status(422).json({
+      success: false,
+      message: 'Invalid email address format. Please provide a valid email so Nova can send your copy signal.'
     });
   }
 

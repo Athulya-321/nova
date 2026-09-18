@@ -260,7 +260,7 @@ export default function ConversationUI() {
             },
             body: JSON.stringify({
               model: 'openai/gpt-4o',
-              max_tokens: 300,
+              max_tokens: 150,
               temperature: 0.75,
               messages: [
                 {

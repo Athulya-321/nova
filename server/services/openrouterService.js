@@ -261,16 +261,31 @@ async function threadNovaDialogue({ message, history = [], profile = {} }) {
   // Current user message
   formattedMessages.push({ role: 'user', content: message });
 
-  const response = await fetch(OPENROUTER_ENDPOINT, {
+  let response = await fetch(OPENROUTER_ENDPOINT, {
     method: 'POST',
     headers: getOpenRouterHeaders(),
     body: JSON.stringify({
       model,
-      max_tokens: 300,
+      max_tokens: 150,
       temperature: 0.75,
       messages: formattedMessages
     })
   });
+
+  // If 402 Payment Required (e.g. low credits for gpt-4o), gracefully fall back to gpt-4o-mini or free tier
+  if (response.status === 402 && model !== 'openai/gpt-4o-mini') {
+    console.warn('[openrouterService] 402 insufficient credits for ' + model + ', falling back to gpt-4o-mini/free tier...');
+    response = await fetch(OPENROUTER_ENDPOINT, {
+      method: 'POST',
+      headers: getOpenRouterHeaders(),
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        max_tokens: 150,
+        temperature: 0.75,
+        messages: formattedMessages
+      })
+    });
+  }
 
   if (!response.ok) {
     const errText = await response.text();
@@ -334,12 +349,12 @@ Output MUST be a valid JSON object matching this schema:
 }`;
 
   try {
-    const response = await fetch(OPENROUTER_ENDPOINT, {
+    let response = await fetch(OPENROUTER_ENDPOINT, {
       method: 'POST',
       headers: getOpenRouterHeaders(),
       body: JSON.stringify({
         model,
-        max_tokens: 200,
+        max_tokens: 150,
         temperature: 0.1,
         response_format: { type: 'json_object' },
         messages: [
@@ -348,6 +363,23 @@ Output MUST be a valid JSON object matching this schema:
         ]
       })
     });
+
+    if (response.status === 402 && model !== 'openai/gpt-4o-mini') {
+      response = await fetch(OPENROUTER_ENDPOINT, {
+        method: 'POST',
+        headers: getOpenRouterHeaders(),
+        body: JSON.stringify({
+          model: 'openai/gpt-4o-mini',
+          max_tokens: 150,
+          temperature: 0.1,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: 'You are a JSON-only entity extraction engine. Output strictly valid JSON.' },
+            { role: 'user', content: extractionPrompt }
+          ]
+        })
+      });
+    }
 
     if (response.ok) {
       const data = await response.json();

@@ -9,11 +9,13 @@
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "node scripts/patch-rolldown.js"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@google/genai": "^2.22.0",
+    "@rolldown/binding-win32-x64-msvc": "^1.2.8",
     "concurrently": "^10.0.5",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

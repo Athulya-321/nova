@@ -15,7 +15,8 @@ export default function HelpSignals() {
   const [formData, setFormData] = useState({
     name: visitorData.name || '',
     age: visitorData.age || '',
-    location: visitorData.location || '',
+    location: visitorData.location || visitorData.place || '',
+    place: visitorData.place || visitorData.location || '',
     email: visitorData.email || '',
     grievance: visitorData.problem || visitorData.grievance || ''
   });
@@ -26,7 +27,8 @@ export default function HelpSignals() {
     setFormData(prev => ({
       name: visitorData.name !== undefined && visitorData.name !== '' ? visitorData.name : prev.name,
       age: visitorData.age !== undefined && visitorData.age !== '' ? visitorData.age : prev.age,
-      location: visitorData.location !== undefined && visitorData.location !== '' ? visitorData.location : prev.location,
+      location: (visitorData.location || visitorData.place) !== undefined && (visitorData.location || visitorData.place) !== '' ? (visitorData.location || visitorData.place) : prev.location,
+      place: (visitorData.place || visitorData.location) !== undefined && (visitorData.place || visitorData.location) !== '' ? (visitorData.place || visitorData.location) : prev.place,
       email: visitorData.email !== undefined && visitorData.email !== '' ? visitorData.email : prev.email,
       grievance: visitorData.grievance || visitorData.problem || prev.grievance
     }));
@@ -42,11 +44,13 @@ export default function HelpSignals() {
       const y = `${rect.top + rect.height / 2}px`;
       setIconOrigin({ x, y });
     }
+    const currentPlace = visitorData.place || visitorData.location || formData.place || formData.location || '';
     // Re-sync with latest visitorData in case user chatted first
     setFormData({
       name: visitorData.name || formData.name || '',
       age: visitorData.age || formData.age || '',
-      location: visitorData.location || formData.location || '',
+      location: currentPlace,
+      place: currentPlace,
       email: visitorData.email || formData.email || '',
       grievance: visitorData.problem || visitorData.grievance || formData.grievance || ''
     });
@@ -62,8 +66,15 @@ export default function HelpSignals() {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      if (field === 'location') updated.place = value;
+      if (field === 'place') updated.location = value;
+      return updated;
+    });
     updateVisitorData(field, value);
+    if (field === 'location') updateVisitorData('place', value);
+    if (field === 'place') updateVisitorData('location', value);
   };
 
   const handleSubmitSignal = async (e) => {
@@ -71,16 +82,24 @@ export default function HelpSignals() {
     setStatusMessage('');
     setIsError(false);
 
-    // Validation for mandatory fields
+    // Strict validation: ALL fields (name, age, place, email) are mandatory
     const missing = [];
-    if (!formData.name?.trim()) missing.push('name');
-    if (!formData.age?.trim()) missing.push('age');
-    if (!formData.location?.trim()) missing.push('location');
-    if (!formData.email?.trim()) missing.push('email');
+    if (!formData.name?.trim()) missing.push('Name');
+    if (!formData.age?.trim()) missing.push('Age');
+    const placeValue = (formData.place?.trim() || formData.location?.trim() || '');
+    if (!placeValue) missing.push('Place / Location');
+    if (!formData.email?.trim()) missing.push('Email Address');
 
     if (missing.length > 0) {
       setIsError(true);
-      setStatusMessage(`Please provide your ${missing.join(', ')} before transmitting.`);
+      setStatusMessage(`All fields are mandatory. Please provide: ${missing.join(', ')}.`);
+      return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(formData.email.trim())) {
+      setIsError(true);
+      setStatusMessage('Please enter a valid email address so Nova can transmit your copy signal.');
       return;
     }
 
@@ -104,7 +123,8 @@ export default function HelpSignals() {
       conversationId: conversationId || ('direct_signal_' + Date.now()),
       name: formData.name.trim(),
       age: formData.age.trim(),
-      location: formData.location.trim(),
+      place: placeValue,
+      location: placeValue,
       email: formData.email.trim(),
       grievance: formData.grievance?.trim() || 'Urgent assistance requested across the Starways.'
     };
@@ -347,6 +367,24 @@ export default function HelpSignals() {
                 </button>
               </div>
 
+              {/* Telemetry info notice */}
+              <div style={{
+                background: 'rgba(125, 226, 255, 0.07)',
+                border: '1px solid rgba(125, 226, 255, 0.25)',
+                borderRadius: '10px',
+                padding: '9px 12px',
+                marginBottom: '14px',
+                fontSize: '11px',
+                color: '#bae6fd',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                letterSpacing: '0.5px'
+              }}>
+                <Sparkles size={14} style={{ color: '#7de2ff', flexShrink: 0 }} />
+                <span><strong>MANDATORY TELEMETRY:</strong> Name, Age, Place, and Email are required. An official copy signal with Nova's status will be beamed to your email address.</span>
+              </div>
+
               {/* Status/Error alert */}
               {statusMessage && (
                 <motion.div
@@ -371,11 +409,12 @@ export default function HelpSignals() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#94a3b8', marginBottom: '6px' }}>
-                      Name <span style={{ color: '#7de2ff' }}>*</span>
+                      Name <span style={{ color: '#7de2ff', fontWeight: 'bold' }}>* MANDATORY</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Your name"
+                      required
+                      placeholder="Your full name"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       style={{
@@ -391,10 +430,11 @@ export default function HelpSignals() {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#94a3b8', marginBottom: '6px' }}>
-                      Age <span style={{ color: '#7de2ff' }}>*</span>
+                      Age <span style={{ color: '#7de2ff', fontWeight: 'bold' }}>* MANDATORY</span>
                     </label>
                     <input
                       type="text"
+                      required
                       placeholder="e.g. 21"
                       value={formData.age}
                       onChange={(e) => handleInputChange('age', e.target.value)}
@@ -411,17 +451,18 @@ export default function HelpSignals() {
                   </div>
                 </div>
 
-                {/* 2-column grid for Location & Email */}
+                {/* 2-column grid for Place / Location & Email */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#94a3b8', marginBottom: '6px' }}>
-                      Location <span style={{ color: '#7de2ff' }}>*</span>
+                      Place / Location <span style={{ color: '#7de2ff', fontWeight: 'bold' }}>* MANDATORY</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="City / Country"
-                      value={formData.location}
-                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      required
+                      placeholder="Your City / Country"
+                      value={formData.place || formData.location}
+                      onChange={(e) => handleInputChange('place', e.target.value)}
                       style={{
                         width: '100%', padding: '10px 14px',
                         background: 'rgba(10, 8, 25, 0.8)',
@@ -435,10 +476,11 @@ export default function HelpSignals() {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#94a3b8', marginBottom: '6px' }}>
-                      Email <span style={{ color: '#7de2ff' }}>*</span>
+                      Email Address <span style={{ color: '#7de2ff', fontWeight: 'bold' }}>* MANDATORY</span>
                     </label>
                     <input
                       type="email"
+                      required
                       placeholder="you@email.com"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
