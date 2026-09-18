@@ -33,7 +33,43 @@ function triggerEmergencyBeep() {
   }
 }
 
-export default function MeteorEmergency() {
+// Module-level guard: lives in memory for the current page session.
+// Resets to false whenever the page is reloaded (browser refresh / F5).
+let hasMeteorTriggeredThisLoad = false;
+
+// Clear any stale persistent storage from previous versions so reload always works cleanly
+if (typeof window !== 'undefined') {
+  try {
+    localStorage.removeItem('nova_asteroid_event_played');
+    localStorage.removeItem('nova_meteor_event_shown');
+  } catch (_) {}
+}
+
+function getPageLoadTimestamp() {
+  if (typeof window !== 'undefined') {
+    if (!window.__novaPageLoadTimestamp) {
+      window.__novaPageLoadTimestamp = Date.now();
+    }
+    return window.__novaPageLoadTimestamp;
+  }
+  return Date.now();
+}
+
+function isMeteorAlreadyTriggered() {
+  if (typeof window !== 'undefined' && window.__novaMeteorTriggeredThisLoad) {
+    return true;
+  }
+  return hasMeteorTriggeredThisLoad;
+}
+
+function markMeteorTriggered() {
+  hasMeteorTriggeredThisLoad = true;
+  if (typeof window !== 'undefined') {
+    window.__novaMeteorTriggeredThisLoad = true;
+  }
+}
+
+export default function MeteorEmergency({ onEventStarted }) {
   // Event state: 'IDLE' | 'PRE_WARNING' | 'NOTIFICATION' | 'MISSION' 
   //             | 'WATCH_PROMPT' | 'WATCH_COUNTDOWN' | 'WATCH_AFTERMATH'
   //             | 'FAILURE_WARNING' | 'FINAL_WARNING' | 'METEOR_VIDEO' | 'AFTERMATH' | 'RECOGNITION'
@@ -60,26 +96,64 @@ export default function MeteorEmergency() {
   const meteorVideoStartedRef = useRef(false);
   const videoElementRef = useRef(null);
 
+  // Dismiss emergency alert and ensure it never appears again during this page visit
+  const handleDismissAlert = () => {
+    markMeteorTriggered();
+    setEventState('IDLE');
+  };
+
   // 30-Second Trigger running on page load
+  // Exactly once per page load after 30 seconds; never again until the page is reloaded.
   useEffect(() => {
-    const preWarnTimer = setTimeout(() => {
-      setEventState('PRE_WARNING');
-    }, 27000);
+    if (isMeteorAlreadyTriggered()) {
+      return;
+    }
+
+    const pageLoadTime = getPageLoadTimestamp();
+    const elapsed = Date.now() - pageLoadTime;
+
+    const targetTriggerTime = 30000;
+    const targetPreWarnTime = 27000;
+
+    let notifyDelay = targetTriggerTime - elapsed;
+    let preWarnDelay = targetPreWarnTime - elapsed;
+
+    if (notifyDelay <= 0) {
+      // 30s has already passed since page load (e.g. user was reading storybook)
+      notifyDelay = 1000;
+      preWarnDelay = -1;
+    } else if (preWarnDelay < 0) {
+      preWarnDelay = -1;
+    }
+
+    let preWarnTimer = null;
+    if (preWarnDelay >= 0) {
+      preWarnTimer = setTimeout(() => {
+        if (!isMeteorAlreadyTriggered()) {
+          if (onEventStarted) onEventStarted();
+          setEventState('PRE_WARNING');
+        }
+      }, preWarnDelay);
+    }
 
     const notifyTimer = setTimeout(() => {
-      setEventState('NOTIFICATION');
-      document.body.classList.add('meteor-subtle-shake');
-      setTimeout(() => {
-        document.body.classList.remove('meteor-subtle-shake');
-      }, 700);
-    }, 30000);
+      if (!isMeteorAlreadyTriggered()) {
+        markMeteorTriggered();
+        if (onEventStarted) onEventStarted();
+        setEventState('NOTIFICATION');
+        document.body.classList.add('meteor-subtle-shake');
+        setTimeout(() => {
+          document.body.classList.remove('meteor-subtle-shake');
+        }, 700);
+      }
+    }, notifyDelay);
 
     return () => {
-      clearTimeout(preWarnTimer);
+      if (preWarnTimer) clearTimeout(preWarnTimer);
       clearTimeout(notifyTimer);
       document.body.classList.remove('meteor-subtle-shake');
     };
-  }, []);
+  }, [onEventStarted]);
 
   // Demonstration (3 cycles) vs Real 10-Second Challenge
   const [isDemonstrating, setIsDemonstrating] = useState(false);
@@ -166,6 +240,7 @@ export default function MeteorEmergency() {
 
   // Handle Action: HELP NOVA (Starts with 3-cycle demonstration)
   const handleStartMission = () => {
+    markMeteorTriggered();
     setIsDemonstrating(true);
     isDemonstratingRef.current = true;
     setDemoCycle(1);
@@ -188,6 +263,7 @@ export default function MeteorEmergency() {
   // "WATCH WHAT HAPPENS" SPECTATOR FLOW
   // ==========================================
   const handleWatchCinematic = () => {
+    markMeteorTriggered();
     // 1. Visitor chooses NOT to help Nova. Close modal smoothly.
     if (typeof window !== 'undefined') {
       localStorage.setItem('meteorMissionOutcome', 'watched');
@@ -288,6 +364,7 @@ export default function MeteorEmergency() {
   // FAILURE SEQUENCE CONTROLLERS
   // ==========================================
   const handleMissionFailure = () => {
+    markMeteorTriggered();
     if (typeof window !== 'undefined') {
       localStorage.setItem('meteorMissionOutcome', 'timeout');
     }
@@ -365,6 +442,7 @@ export default function MeteorEmergency() {
 
       // Return to original website smoothly
       setTimeout(() => {
+        markMeteorTriggered();
         sessionStorage.setItem('meteorMissionCompleted', 'true');
         sessionStorage.setItem('nova_meteor_event_completed', 'true');
         setEventState('IDLE');
@@ -374,6 +452,7 @@ export default function MeteorEmergency() {
 
   // Handle Spectator Return Button
   const handleSpectatorReturn = () => {
+    markMeteorTriggered();
     sessionStorage.setItem('meteorMissionCompleted', 'true');
     sessionStorage.setItem('nova_meteor_event_completed', 'true');
     setEventState('IDLE');
@@ -383,6 +462,7 @@ export default function MeteorEmergency() {
   // SUCCESS: "THE STARWAYS REMEMBER YOU"
   // ==========================================
   const startRecognitionSequence = () => {
+    markMeteorTriggered();
     setEventState('RECOGNITION');
     setRecognitionPhase(1); // 1: Panel appears
 
@@ -422,6 +502,7 @@ export default function MeteorEmergency() {
 
     // Return to website gracefully
     setTimeout(() => {
+      markMeteorTriggered();
       sessionStorage.setItem('meteorMissionCompleted', 'true');
       sessionStorage.setItem('nova_meteor_event_completed', 'true');
       setEventState('IDLE');
