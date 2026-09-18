@@ -367,23 +367,6 @@ export default function HelpSignals() {
                 </button>
               </div>
 
-              {/* Telemetry info notice */}
-              <div style={{
-                background: 'rgba(125, 226, 255, 0.07)',
-                border: '1px solid rgba(125, 226, 255, 0.25)',
-                borderRadius: '10px',
-                padding: '9px 12px',
-                marginBottom: '14px',
-                fontSize: '11px',
-                color: '#bae6fd',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                letterSpacing: '0.5px'
-              }}>
-                <Sparkles size={14} style={{ color: '#7de2ff', flexShrink: 0 }} />
-                <span><strong>MANDATORY TELEMETRY:</strong> Name, Age, Place, and Email are required. An official copy signal with Nova's status will be beamed to your email address.</span>
-              </div>
 
               {/* Status/Error alert */}
               {statusMessage && (
