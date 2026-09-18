@@ -337,7 +337,7 @@ export default function HelpSignals() {
                       TRANSMIT SOS SIGNAL
                     </h2>
                     <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#a78bfa' }}>
-                      Direct cosmic connection to Nova (nova0hero@gmail.com)
+                      Direct cosmic quantum link to Nova's flagship console
                     </p>
                   </div>
                 </div>

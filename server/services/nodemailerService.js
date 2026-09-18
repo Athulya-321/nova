@@ -10,7 +10,7 @@ function createTransporter() {
     dotenv.config({ path: '.env', override: true });
   } catch (_) {}
 
-  const user = (process.env.EMAIL_USER || process.env.ADMIN_EMAIL || 'nova0hero@gmail.com').trim();
+  const user = (process.env.EMAIL_USER || process.env.ADMIN_EMAIL || '').trim();
   const rawPass = process.env.EMAIL_PASS || process.env.EMAIL_APP_PASSWORD || process.env.ADMIN_EMAIL_PASSWORD || '';
   const pass = rawPass.replace(/\s+/g, '').trim();
 
@@ -32,7 +32,6 @@ function createTransporter() {
  * Contains all mandatory telemetry: Name, Age, Place, Email, and Distress Message.
  */
 function buildHeroEmailTemplate({ name, age, place, email, grievance, formattedDate, formattedTime, timeZone }) {
-  const heroInbox = process.env.ADMIN_EMAIL || process.env.EMAIL_USER || 'nova0hero@gmail.com';
   return `
 <!DOCTYPE html>
 <html>
@@ -493,8 +492,12 @@ function buildVisitorCopyEmailTemplate({ name, age, place, email, grievance, for
  * @param {Date} submittedAt - Transmission date
  */
 export async function sendGrievanceEmailWithNodeMailer(profile, submittedAt = new Date()) {
-  const adminEmail = (process.env.ADMIN_EMAIL || process.env.EMAIL_USER || 'nova0hero@gmail.com').trim();
+  const adminEmail = (process.env.ADMIN_EMAIL || process.env.EMAIL_USER || '').trim();
   const appPassword = (process.env.EMAIL_PASS || process.env.EMAIL_APP_PASSWORD || process.env.ADMIN_EMAIL_PASSWORD || '').replace(/\s+/g, '').trim();
+
+  if (!adminEmail) {
+    throw new Error("Missing ADMIN_EMAIL or EMAIL_USER in environment variables.");
+  }
 
   if (!appPassword) {
     throw new Error("Missing EMAIL_PASS or EMAIL_APP_PASSWORD in .env. Please configure your 16-character Google App Password.");

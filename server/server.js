@@ -139,7 +139,7 @@ app.post('/api/submit-grievance', async (req, res) => {
     // Generate submission timestamp in backend
     const submittedAt = new Date();
     
-    // Send Email via Nodemailer to nova0hero@gmail.com
+    // Send Email via Nodemailer to Hero & Citizen
     await sendGrievanceEmailWithNodeMailer(profile, submittedAt);
     
     // Mark as sent
