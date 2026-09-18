@@ -15,7 +15,6 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@google/genai": "^2.22.0",
-    "@rolldown/binding-win32-x64-msvc": "^1.2.8",
     "concurrently": "^10.0.5",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -25,6 +24,9 @@
     "nodemailer": "^10.0.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "^1.2.8"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
