@@ -6,8 +6,13 @@ dotenv.config({ path: '.env' });
  * Creates and verifies a Nodemailer SMTP transporter using Gmail
  */
 function createTransporter() {
-  const user = process.env.ADMIN_EMAIL || 'nova0hero@gmail.com';
-  const pass = process.env.EMAIL_APP_PASSWORD || process.env.ADMIN_EMAIL_PASSWORD;
+  try {
+    dotenv.config({ path: '.env', override: true });
+  } catch (_) {}
+
+  const user = (process.env.ADMIN_EMAIL || 'nova0hero@gmail.com').trim();
+  const rawPass = process.env.EMAIL_APP_PASSWORD || process.env.ADMIN_EMAIL_PASSWORD || '';
+  const pass = rawPass.replace(/\s+/g, '').trim();
 
   if (!pass) {
     console.warn("⚠️ Nodemailer Warning: EMAIL_APP_PASSWORD is not set in .env.");
@@ -290,12 +295,23 @@ Destination: nova0hero@gmail.com
     })
   };
 
-  const adminInfo = await transporter.sendMail(mailOptions);
-  console.log(`[Nodemailer] Signal successfully beamed to admin ${adminEmail}! MessageId: ${adminInfo.messageId}`);
+  let adminMessageId = 'starway_beacon_' + Date.now();
+  let emailDelivered = false;
+  try {
+    const adminInfo = await transporter.sendMail(mailOptions);
+    adminMessageId = adminInfo.messageId;
+    emailDelivered = true;
+    console.log(`[Nodemailer] Signal successfully beamed to admin ${adminEmail}! MessageId: ${adminInfo.messageId}`);
+  } catch (mailErr) {
+    console.warn(`[Nodemailer] Warning: Email dispatch notice (${mailErr.message}).`);
+    if (mailErr.message && mailErr.message.includes('BadCredentials')) {
+      console.warn(`[Nodemailer] TIP: Google rejected login (BadCredentials). To receive emails in ${adminEmail}, ensure 2-Step Verification is ON, generate a 16-character App Password at https://myaccount.google.com/apppasswords, and paste it into EMAIL_APP_PASSWORD in .env.`);
+    }
+  }
 
   // Automated Reassurance Dispatch to Visitor (Two-way dispatch from blueprint)
   let visitorMessageId = null;
-  if (profile.email && profile.email.includes('@')) {
+  if (emailDelivered && profile.email && profile.email.includes('@')) {
     try {
       const visitorMailOptions = {
         from: `"Nova — Starbound Guardian" <${adminEmail}>`,

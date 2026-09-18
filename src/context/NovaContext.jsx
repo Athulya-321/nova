@@ -88,8 +88,8 @@ export const NovaProvider = ({ children }) => {
   const updateVisitorData = (key, value) => {
     setVisitorData(prev => {
       const updated = { ...prev, [key]: value };
-      if (key === 'problem' && !updated.grievance) updated.grievance = value;
-      if (key === 'grievance' && !updated.problem) updated.problem = value;
+      if (key === 'problem') updated.grievance = value;
+      if (key === 'grievance') updated.problem = value;
       return updated;
     });
   };

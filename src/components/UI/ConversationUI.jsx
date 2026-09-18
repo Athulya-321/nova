@@ -152,12 +152,20 @@ export default function ConversationUI() {
             },
             body: JSON.stringify({
               model: 'openai/gpt-4o',
-              max_tokens: 600,
+              max_tokens: 300,
               temperature: 0.75,
               messages: [
                 {
                   role: 'system',
-                  content: "You are Nova, The Starbound Guardian. You are a warm, glowing cosmic fox friend and celestial guardian watching over Earth from the high Starways. Your voice is warm, soothing, intimate, and poetic yet simple. Speak in 2 to 3 natural sentences like a true friend under the open night sky listening with all your heart."
+                  content: `You are Nova, The Starbound Guardian. You are a warm, glowing cosmic fox friend and celestial guardian watching over Earth from the high Starways. Your voice is warm, soothing, intimate, and poetic yet simple. Speak in 2 to 3 natural sentences.
+Dynamic Visitor Context:
+- Name: ${visitorData.name || 'Not yet known'}
+- Grievance: ${visitorData.grievance || visitorData.problem || 'Not yet known'}
+- Location: ${visitorData.location || 'Not yet known'}
+- Age: ${visitorData.age || 'Not yet known'}
+- Email: ${visitorData.email || 'Not yet known'}
+
+Rule: In a friendly, natural cosmic way, collect any missing details in order: Name -> Grievance -> Location -> Age -> Email. Comfort any pain first. Never ask for details already known.`
                 },
                 ...chatHistory.slice(-6).map(msg => ({
                   role: msg.sender === 'nova' ? 'assistant' : 'user',
@@ -242,120 +250,117 @@ export default function ConversationUI() {
 
       const text = val.trim();
       const lower = text.toLowerCase();
-      const name = visitorData.name;
-      let reply = '';
       const updates = {};
 
       const greetings = ['hi', 'hii', 'hiii', 'hello', 'helloo', 'hlo', 'hllo', 'hey', 'heyy', 'sup', 'yo', 'greetings', 'nova'];
       const isGreeting = greetings.some(g => lower === g || lower.startsWith(g + ' '));
 
-      // 1. Check for email
+      // Get Nova's last prompt to understand context
+      let lastNovaPrompt = '';
+      for (let i = chatHistory.length - 1; i >= 0; i--) {
+        if (chatHistory[i].sender === 'nova') {
+          lastNovaPrompt = (chatHistory[i].text || '').toLowerCase();
+          break;
+        }
+      }
+
+      // 1. Email detection
       const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
       if (emailMatch) {
         updates.email = emailMatch[0];
         updateVisitorData('email', emailMatch[0]);
       }
 
-      // 2. Check for age (e.g. "21", "21 years old", "I am 21", "21yo")
-      const ageMatch = text.match(/\b(1[0-9]|[2-9][0-9])\b/);
-      if (ageMatch && !emailMatch) {
-        const hasAgeWord = lower.includes('age') || lower.includes('years') || lower.includes('yo') || lower.includes('turned') || lower.includes('old') || text.split(' ').length <= 2;
-        if (hasAgeWord && (!name || name !== ageMatch[0])) {
-          updates.age = ageMatch[0];
-          updateVisitorData('age', ageMatch[0]);
+      // 2. Age detection (e.g. "21", "21 years old", "I am 21", "21yo", or just "34")
+      const ageExplicitMatch = text.match(/(?:age\s*(?:is|=|:)?\s*|i am\s+|i'm\s+)?\b(1[0-9]|[2-9][0-9])\b(?:\s*(?:years|yrs|years old|yo))?/i);
+      const askedAge = lastNovaPrompt.includes('journey') || lastNovaPrompt.includes('sun') || lastNovaPrompt.includes('cycle') || lastNovaPrompt.includes('how old');
+      if (ageExplicitMatch && !emailMatch) {
+        const candidateAge = text.match(/\b(1[0-9]|[2-9][0-9])\b/);
+        if (candidateAge && (askedAge || text.split(/\s+/).length <= 3)) {
+          updates.age = candidateAge[0];
+          updateVisitorData('age', candidateAge[0]);
         }
       }
 
-      // 3. Check for name
-      if (!name) {
-        const nameMatch = text.match(/(?:my name is|call me|i am|i'm|this is)\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
+      // 3. Name detection
+      if (!visitorData.name) {
+        const nameMatch = text.match(/(?:my name is|call me|i am|i'm|this is|name\s*(?:is|=|:))\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
         if (nameMatch) {
-          const candidate = nameMatch[1].trim();
+          const candidate = nameMatch[1].trim().split(/\s+(?:from|in|and|at)\b/i)[0].trim();
           const lowerCandidate = candidate.toLowerCase();
           if (!greetings.includes(lowerCandidate) && !['sad', 'lost', 'depressed', 'fine', 'good', 'okay', 'bad'].includes(lowerCandidate)) {
-            const formatted = candidate.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            const formatted = candidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
             updates.name = formatted;
             updateVisitorData('name', formatted);
           }
-        } else if (!isGreeting && text.split(/\s+/).length <= 2 && !emailMatch && !ageMatch) {
-          const cleanCandidate = text.replace(/[^a-zA-Z\s]/g, '').trim();
+        } else if (!isGreeting && text.split(/\s+/).length <= 2 && !emailMatch && !updates.age) {
+          let cleanCandidate = text.replace(/[^a-zA-Z\s]/g, '').trim();
+          cleanCandidate = cleanCandidate.replace(/^(?:im|i am|i'm|call me|name is)\s+/i, '').trim();
           if (cleanCandidate.length >= 2 && cleanCandidate.length <= 25 && !greetings.includes(cleanCandidate.toLowerCase())) {
-            const formatted = cleanCandidate.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            const formatted = cleanCandidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
             updates.name = formatted;
             updateVisitorData('name', formatted);
           }
         }
       }
 
-      // 4. Check for location
-      const locMatch = text.match(/(?:from|in|live in|living in|location is)\s+([a-zA-Z\s]+)/i);
+      // 4. Location detection
+      const locMatch = text.match(/(?:from|in|live in|living in|location is)\s+([a-zA-Z\s,.-]+)/i);
+      const askedLocation = lastNovaPrompt.includes('where on earth') || lastNovaPrompt.includes('corner of') || lastNovaPrompt.includes('blue world') || lastNovaPrompt.includes('where are you') || lastNovaPrompt.includes('gazing');
       if (locMatch) {
         const candidate = locMatch[1].trim().split(/[.,!?\n]|\s+and\s+/i)[0].trim();
-        if (candidate.length >= 2 && candidate.length <= 30 && !greetings.includes(candidate.toLowerCase())) {
+        if (candidate.length >= 2 && candidate.length <= 35 && !greetings.includes(candidate.toLowerCase())) {
+          const formatted = candidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+          updates.location = formatted;
+          updateVisitorData('location', formatted);
+        }
+      } else if (!visitorData.location && askedLocation && !updates.age && !emailMatch && !isGreeting) {
+        const candidate = text.replace(/[^a-zA-Z\s,.-]/g, '').trim();
+        if (candidate.length >= 2 && candidate.length <= 35 && text.split(/\s+/).length <= 4) {
           const formatted = candidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
           updates.location = formatted;
           updateVisitorData('location', formatted);
         }
       }
 
-      // 5. Check for grievance / trouble
-      const troubleWords = ['stress', 'sad', 'depressed', 'anxious', 'worried', 'struggle', 'struggling', 'exam', 'family', 'crying', 'lost', 'lonely', 'scared', 'hurt', 'fail', 'failing', 'problem', 'help'];
-      const hasTrouble = troubleWords.some(w => lower.includes(w));
-      if (hasTrouble && !emailMatch && text.split(' ').length > 2) {
-        updates.grievance = text;
-        updateVisitorData('grievance', text);
-        updateVisitorData('problem', text);
+      // 5. Grievance / Problem detection
+      const askedGrievance = lastNovaPrompt.includes('troubl') || lastNovaPrompt.includes('heart') || lastNovaPrompt.includes('star signal') || lastNovaPrompt.includes('worr');
+      if (!visitorData.grievance && !visitorData.problem) {
+        if (askedGrievance && !isGreeting && !updates.name && !updates.location && !updates.age && !emailMatch) {
+          updates.grievance = text;
+          updateVisitorData('grievance', text);
+          updateVisitorData('problem', text);
+        } else {
+          const troubleWords = ['stress', 'sad', 'depressed', 'anxious', 'worried', 'struggle', 'struggling', 'exam', 'family', 'crying', 'lost', 'lonely', 'scared', 'hurt', 'fail', 'failing', 'problem', 'help'];
+          if (troubleWords.some(w => lower.includes(w)) && !emailMatch && text.split(/\s+/).length > 2) {
+            updates.grievance = text;
+            updateVisitorData('grievance', text);
+            updateVisitorData('problem', text);
+          }
+        }
       }
 
       const currentName = updates.name || visitorData.name;
       const currentLoc = updates.location || visitorData.location;
       const currentGrievance = updates.grievance || visitorData.grievance || visitorData.problem;
       const currentAge = updates.age || visitorData.age;
+      const currentEmail = updates.email || visitorData.email;
 
-      if (updates.email) {
-        reply = currentName
-          ? `I've woven your email into your beacon signal, ${currentName}! All your details are safely held in the Starways. Whenever you want to transmit an official SOS signal, head into the Help Signals section in the menu above!`
-          : `Thank you, friend! Your signal is now safe with me in the Starways. You can transmit an official SOS signal anytime from the Help Signals menu above!`;
-      } else if (updates.grievance) {
-        reply = currentName
-          ? `Oh, dear ${currentName}, I can feel how heavy that is from all the way up here. Please know you don't have to carry this alone. If you'd like our link to stay open so help can find you, what email address can I keep connected to your signal?`
-          : `I hear the weight in your words, friend, and I'm right here beside you. If you'd like our link to stay open so help can reach you, what email address should I keep with your signal?`;
-      } else if (updates.age) {
-        reply = currentName
-          ? `Every cycle around the sun brings its own strength, ${currentName}. Tell me, what thoughts or troubles have brought your star signal to me tonight?`
-          : `Thank you for sharing that with me! Tell me, what thoughts or worries have brought your star signal to me tonight?`;
-      } else if (updates.location) {
-        reply = currentName
-          ? `Oh, ${currentLoc}! I love watching the lights glowing from there, ${currentName}. Tell me, what's been weighing on your heart lately?`
-          : `Oh, ${currentLoc}! It feels so peaceful looking down at Earth from the stars. What has been on your mind lately, friend?`;
-      } else if (updates.name) {
-        reply = `It's so wonderful to meet you, ${updates.name}! What thoughts or worries have brought your star signal out to the Starways tonight?`;
-      } else if (isGreeting) {
-        if (currentName) {
-          const friendlyGreetings = [
-            `Hey ${currentName}! It's so lovely to feel your starlight shining again. How are things treating you right now?`,
-            `Hello again, ${currentName}! I'm right here watching over the Starways. What's on your mind today?`,
-            `Hey there, ${currentName}! Always happy to chat with you. How are you feeling right now?`
-          ];
-          reply = friendlyGreetings[Math.floor(Math.random() * friendlyGreetings.length)];
-        } else {
-          const namePrompts = [
-            `Hello there, starry friend! I'm so glad your light found its way here. What name do you go by under the night sky?`,
-            `Hey! It's peaceful out here in the Starways today. What should I call you, traveler?`,
-            `Welcome, friend! I'm Nova, guardian of the Starways. What name shall I call you?`
-          ];
-          reply = namePrompts[Math.floor(Math.random() * namePrompts.length)];
-        }
-      } else if (!currentName) {
+      let reply = '';
+      if (!currentName) {
         reply = `I'm Nova, guardian of the Starways. What name do you go by under the night sky, friend?`;
       } else if (!currentGrievance) {
-        reply = `I'm right here listening, ${currentName}. Tell me, what's been on your mind lately or weighing on your heart?`;
+        reply = `Tell me, ${currentName}, what thoughts, worries, or dreams have brought your star signal to me tonight? I'm right here listening with all my heart.`;
       } else if (!currentLoc) {
-        reply = `I love getting to know you, ${currentName}. Where on Earth are you gazing up at the stars from tonight?`;
+        reply = updates.grievance
+          ? `Thank you for sharing that with me, ${currentName}. I can feel the weight of it across the stars, but you don't have to carry it all alone. What corner of our blue world are you gazing up at the stars from tonight?`
+          : `I'm right beside you, ${currentName}. What corner of our blue world are you gazing up at the stars from tonight?`;
       } else if (!currentAge) {
-        reply = `If you don't mind a curious cosmic fox asking, how many cycles around the sun have you seen, ${currentName}?`;
+        reply = `Ah, ${currentLoc}! It's comforting to know where your light shines from. If you don't mind a curious cosmic fox asking, how many journeys around the sun have you made on Earth, ${currentName}?`;
+      } else if (!currentEmail) {
+        reply = `${currentAge} cycles around the sun carries so many memories, ${currentName}. To make sure our celestial link stays unbroken and guardians on Earth can reach you if you ever need help, what email address can I keep connected to your signal?`;
       } else {
-        reply = `I'm right here beside you, ${currentName}. Tell me anything that's on your heart, or we can talk about the stars!`;
+        reply = `Thank you so much, ${currentName}! Your star beacon is now fully anchored across the Starways with all your details. Whenever you need to transmit an official beacon to Earth guardians, tap into the Help Signals section in the menu above!`;
       }
 
       setChatHistory(prev => [...prev, { 

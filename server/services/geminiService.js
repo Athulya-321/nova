@@ -279,35 +279,26 @@ export function generateHeuristicResponse(message, history, currentProfile = {})
   } else if (!name) {
     reply = "It's so wonderful to meet you! I'm Nova, guardian of the Starways. What should I call you, dear friend?";
     intent = 'collecting_information';
-  } else if (mood === 'sad' || updates.grievance || profile.grievance) {
-    if (updates.grievance) {
-      reply = `Thank you for trusting me with that, ${name}. I can feel how heavy that is from all the way up here, but you don't have to carry it by yourself. If you'd like our link to stay open so help can reach you, what email address should I keep with your signal?`;
-      intent = 'grievance';
-    } else if (!profile.email) {
-      reply = `I'm holding your words close, ${name}. To make sure guardian assistance can reach you, what email address can I keep connected to your signal?`;
-      intent = 'collecting_information';
-    } else {
-      reply = `I hear you, ${name}. Your beacon is safely registered with me in the Starways. Whenever you want to transmit an official SOS signal to Earth guardians, tap into Help Signals above!`;
-      intent = 'submission';
-    }
-  } else if (updates.location) {
-    reply = `Oh, ${updates.location}! I love looking down at the lights glowing from there. Tell me, ${name}, what has been on your mind lately?`;
-    intent = 'general';
-  } else if (updates.age) {
-    reply = `Every cycle brings its own adventures and challenges, ${name}. What brings your starlight into the Starways today?`;
-    intent = 'general';
-  } else if (updates.email) {
-    reply = `I have your email safely woven into your signal, ${name}! Your details are held securely in the Starways. You can transmit an official SOS signal anytime from the Help Signals menu!`;
-    intent = 'submission';
-  } else if (!profile.location) {
-    reply = `It's so good having you here in the Starways, ${name}! What corner of Earth do you gaze up at the stars from?`;
-    intent = 'collecting_information';
-  } else if (!profile.grievance) {
-    reply = `I love getting to know you, ${name}. Tell me, what's been on your mind lately? Is there anything troubling your thoughts or something you're hoping for?`;
+  } else if (!profile.grievance && !updates.grievance) {
+    reply = `I'm right here listening, ${name}. Tell me, what thoughts, worries, or dreams have brought your star signal to me tonight?`;
     intent = 'grievance';
+  } else if (!profile.location && !updates.location) {
+    const locAck = updates.grievance
+      ? `Thank you for trusting me with what's on your heart, ${name}. I can feel the weight of it across the stars, but you don't have to carry it all alone. What corner of our blue world are you gazing up at the stars from tonight?`
+      : `I'm right beside you, ${name}. What corner of our blue world are you gazing up at the stars from tonight?`;
+    reply = locAck;
+    intent = 'collecting_information';
+  } else if (!profile.age && !updates.age) {
+    const locName = updates.location || profile.location;
+    reply = `Ah, ${locName}! It's comforting to know where your light shines from. If you don't mind a curious cosmic fox asking, how many journeys around the sun have you made on Earth, ${name}?`;
+    intent = 'collecting_information';
+  } else if (!profile.email && !updates.email) {
+    const ageVal = updates.age || profile.age;
+    reply = `${ageVal} cycles around the sun carries so many memories and moments, ${name}. To make sure our celestial link stays unbroken and guardians on Earth can reach you if you ever need help, what email address can I keep connected to your signal?`;
+    intent = 'collecting_information';
   } else {
-    reply = `I'm right here listening, ${name}. Tell me more about what's going on, or ask me anything you like about the Starways!`;
-    intent = 'general';
+    reply = `Thank you so much, ${name}! Your star beacon is now fully anchored in the Starways with all your details. Whenever you need to transmit an official SOS beacon to Earth guardians, tap into the Help Signals menu above, or stay right here and talk with me.`;
+    intent = 'submission';
   }
 
   return {
