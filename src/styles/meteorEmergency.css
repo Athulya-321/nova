@@ -67,124 +67,293 @@ body.meteor-subtle-shake {
 }
 
 /* Glassmorphism Notification Modal */
+/* Glassmorphism Notification Modal */
 .meteor-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 3, 12, 0.76);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  z-index: 95;
+  background: radial-gradient(circle at 50% 35%, rgba(18, 12, 45, 0.90) 0%, rgba(3, 2, 10, 0.97) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  z-index: 99990;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 24px;
 }
 
 .meteor-glass-card {
   position: relative;
-  background: rgba(8, 7, 24, 0.85);
-  border: 1px solid rgba(140, 130, 255, 0.35);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(130, 100, 255, 0.22);
+  background: linear-gradient(145deg, rgba(16, 14, 42, 0.92) 0%, rgba(7, 6, 22, 0.96) 100%);
+  border: 1px solid rgba(125, 226, 255, 0.35);
+  box-shadow: 
+    0 35px 80px rgba(0, 0, 0, 0.95), 
+    0 0 50px rgba(125, 226, 255, 0.22), 
+    0 0 100px rgba(170, 59, 255, 0.20), 
+    inset 0 1px 2px rgba(255, 255, 255, 0.35),
+    inset 0 0 30px rgba(125, 226, 255, 0.08);
   border-radius: 28px;
   padding: 44px 48px;
-  max-width: 580px;
-  width: 92%;
+  max-width: 600px;
+  width: 94%;
   box-sizing: border-box;
   text-align: center;
   color: #fff;
+  overflow: hidden;
 }
 
+/* Ambient Radial Starlight Sheen Inside Card */
+.meteor-glass-card::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 380px;
+  height: 140px;
+  background: radial-gradient(ellipse at center, rgba(125, 226, 255, 0.22) 0%, rgba(170, 59, 255, 0.12) 50%, transparent 80%);
+  filter: blur(35px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Sci-Fi Holographic Corner Accents */
+.meteor-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: #7de2ff;
+  border-style: solid;
+  pointer-events: none;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 6px rgba(125, 226, 255, 0.8));
+  z-index: 2;
+}
+.corner-tl { top: 14px; left: 14px; border-width: 2px 0 0 2px; border-top-left-radius: 8px; }
+.corner-tr { top: 14px; right: 14px; border-width: 2px 2px 0 0; border-top-right-radius: 8px; }
+.corner-bl { bottom: 14px; left: 14px; border-width: 0 0 2px 2px; border-bottom-left-radius: 8px; }
+.corner-br { bottom: 14px; right: 14px; border-width: 0 2px 2px 0; border-bottom-right-radius: 8px; }
+
+/* Pulsing Critical Alert Tag */
 .meteor-alert-tag {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
-  border-radius: 20px;
-  background: rgba(255, 60, 40, 0.18);
-  border: 1px solid rgba(255, 80, 60, 0.45);
-  color: #ff6b57;
-  font-size: 0.85rem;
+  gap: 10px;
+  padding: 8px 20px;
+  border-radius: 30px;
+  background: rgba(255, 70, 60, 0.14);
+  border: 1px solid rgba(255, 95, 80, 0.55);
+  color: #ff8a7a;
+  font-size: 0.82rem;
   letter-spacing: 3px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   margin-bottom: 20px;
-  box-shadow: 0 0 15px rgba(255, 80, 60, 0.2);
+  box-shadow: 0 0 25px rgba(255, 70, 60, 0.3);
+  z-index: 1;
 }
 
+.meteor-alert-pulse-ring {
+  position: absolute;
+  left: 17px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid #ff4d4d;
+  animation: meteorPulsePing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.meteor-alert-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  box-shadow: 0 0 10px #ff4d4d;
+  display: inline-block;
+}
+
+@keyframes meteorPulsePing {
+  0% { transform: scale(1); opacity: 1; }
+  75%, 100% { transform: scale(3); opacity: 0; }
+}
+
+/* Card Title */
 .meteor-card-title {
+  position: relative;
   font-family: var(--font-display, 'Outfit', sans-serif);
-  font-size: 1.95rem;
+  font-size: 2.15rem;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  line-height: 1.25;
+  background: linear-gradient(180deg, #ffffff 0%, #dbeafe 55%, #7de2ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 18px 0;
+  filter: drop-shadow(0 0 25px rgba(125, 226, 255, 0.45));
+  z-index: 1;
+}
+
+/* Telemetry HUD Panel */
+.meteor-telemetry-panel {
+  position: relative;
+  background: rgba(12, 10, 32, 0.68);
+  border: 1px solid rgba(125, 226, 255, 0.22);
+  border-radius: 18px;
+  padding: 18px 22px;
+  margin-bottom: 24px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  z-index: 1;
+}
+
+.meteor-telemetry-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.meteor-telemetry-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
   font-weight: 700;
-  letter-spacing: 2px;
-  color: #ffffff;
-  margin-bottom: 16px;
-  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  background: rgba(125, 226, 255, 0.1);
+  border: 1px solid rgba(125, 226, 255, 0.35);
+  color: #7de2ff;
+}
+
+.meteor-telemetry-chip.warning {
+  background: rgba(255, 75, 60, 0.12);
+  border-color: rgba(255, 90, 80, 0.45);
+  color: #ff9b8e;
+}
+
+.chip-dot-blue {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7de2ff;
+  box-shadow: 0 0 8px #7de2ff;
+}
+
+.chip-dot-red {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  box-shadow: 0 0 8px #ff4d4d;
 }
 
 .meteor-card-desc {
   font-family: var(--font-primary, sans-serif);
-  font-size: 1.12rem;
+  font-size: 1.05rem;
   line-height: 1.65;
-  color: rgba(225, 230, 255, 0.9);
-  margin-bottom: 24px;
+  color: rgba(226, 232, 255, 0.92);
+  margin: 0;
 }
 
+.meteor-card-subdesc {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.95rem;
+  color: #c4b5fd;
+  font-style: italic;
+}
+
+/* The Question Callout */
 .meteor-card-question {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-family: var(--font-display, 'Outfit', sans-serif);
-  font-size: 1.22rem;
+  font-size: 1.15rem;
   letter-spacing: 2px;
-  color: var(--nova-glow, #7de2ff);
-  font-weight: 600;
-  margin-bottom: 32px;
+  color: #7de2ff;
+  font-weight: 700;
+  margin-bottom: 28px;
+  text-shadow: 0 0 18px rgba(125, 226, 255, 0.65);
+  animation: meteorGlowBreath 3s ease-in-out infinite;
+  z-index: 1;
 }
 
+.question-sparkle {
+  color: #a78bfa;
+}
+
+@keyframes meteorGlowBreath {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(125, 226, 255, 0.5)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 20px rgba(125, 226, 255, 0.9)); transform: scale(1.02); }
+}
+
+/* Action Buttons */
 .meteor-button-group {
+  position: relative;
   display: flex;
   gap: 16px;
   justify-content: center;
   flex-wrap: wrap;
+  z-index: 1;
 }
 
 .meteor-btn-primary {
-  background: linear-gradient(135deg, rgba(80, 160, 255, 0.85) 0%, rgba(130, 90, 255, 0.85) 100%);
-  border: 1px solid rgba(160, 210, 255, 0.6);
-  color: #fff;
-  padding: 14px 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #7de2ff 0%, #38bdf8 40%, #a855f7 100%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  color: #060515;
+  padding: 15px 34px;
   border-radius: 30px;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 0.96rem;
+  font-weight: 800;
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 8px 25px rgba(100, 120, 255, 0.35);
+  box-shadow: 0 0 35px rgba(125, 226, 255, 0.6), 0 10px 25px rgba(56, 189, 248, 0.4);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .meteor-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(120, 150, 255, 0.55), 0 0 20px rgba(120, 220, 255, 0.6);
-  border-color: #fff;
+  box-shadow: 0 0 50px rgba(125, 226, 255, 0.85), 0 15px 35px rgba(168, 85, 247, 0.5);
+  border-color: #ffffff;
 }
 
 .meteor-btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(230, 235, 255, 0.85);
-  padding: 14px 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(230, 235, 255, 0.88);
+  padding: 15px 30px;
   border-radius: 30px;
-  font-size: 0.95rem;
+  font-size: 0.94rem;
   font-weight: 600;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   cursor: pointer;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   transition: all 0.3s ease;
 }
 
 .meteor-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.4);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(125, 226, 255, 0.55);
+  color: #ffffff;
+  box-shadow: 0 0 25px rgba(125, 226, 255, 0.25);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================
@@ -541,7 +710,7 @@ body.meteor-subtle-shake {
 .recognition-stage-container {
   position: fixed;
   inset: 0;
-  z-index: 98;
+  z-index: 99990;
   background: radial-gradient(circle at 50% 45%, rgba(10, 14, 38, 0.94) 0%, rgba(3, 2, 10, 0.98) 100%);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -739,7 +908,7 @@ body.meteor-subtle-shake {
 .meteor-failure-overlay {
   position: fixed;
   inset: 0;
-  z-index: 97;
+  z-index: 99990;
   background: radial-gradient(circle at 50% 50%, rgba(18, 4, 8, 0.95) 0%, rgba(2, 1, 6, 0.98) 100%);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -956,7 +1125,7 @@ body.meteor-subtle-shake {
 .spectator-stage-overlay {
   position: fixed;
   inset: 0;
-  z-index: 98;
+  z-index: 99990;
   background: radial-gradient(circle at 50% 50%, rgba(12, 8, 26, 0.95) 0%, rgba(3, 2, 10, 0.98) 100%);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);

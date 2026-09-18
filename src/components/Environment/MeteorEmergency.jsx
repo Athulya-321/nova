@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, Sparkles, Radio } from 'lucide-react';
 import '../../styles/meteorEmergency.css';
 
 // Constellation target nodes (Guardian Shield shape)
@@ -604,44 +604,79 @@ export default function MeteorEmergency() {
         {eventState === 'NOTIFICATION' && (
           <div className="meteor-modal-overlay">
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              initial={{ opacity: 0, scale: 0.90, y: 25 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 20 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, scale: 0.90, y: 25 }}
+              transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
               className="meteor-glass-card"
             >
+              {/* Sci-Fi Holographic Corner Accents */}
+              <span className="meteor-corner corner-tl" />
+              <span className="meteor-corner corner-tr" />
+              <span className="meteor-corner corner-bl" />
+              <span className="meteor-corner corner-br" />
+
+              {/* Pulsing Critical Alert Tag */}
               <div className="meteor-alert-tag">
-                <AlertTriangle size={16} />
-                <span>INCOMING SIGNAL</span>
+                <span className="meteor-alert-pulse-ring" />
+                <span className="meteor-alert-pulse-dot" />
+                <AlertTriangle size={15} />
+                <span>CRITICAL ALERT // INCOMING VECTOR</span>
               </div>
 
+              {/* Main Title */}
               <h2 className="meteor-card-title">
                 A METEOR IS APPROACHING EARTH
               </h2>
 
-              <p className="meteor-card-desc">
-                Nova has detected an incoming meteor on a collision course with Earth.
-                <br /><br />
-                She needs your help.
-              </p>
+              {/* Telemetry HUD Panel */}
+              <div className="meteor-telemetry-panel">
+                <div className="meteor-telemetry-row">
+                  <span className="meteor-telemetry-chip">
+                    <span className="chip-dot-blue" />
+                    <span>TARGET: EARTH (SOL-3)</span>
+                  </span>
+                  <span className="meteor-telemetry-chip warning">
+                    <span className="chip-dot-red" />
+                    <span>THREAT: CLASS-IV METEOR</span>
+                  </span>
+                </div>
 
-              <div className="meteor-card-question">
-                WILL YOU HELP NOVA PROTECT EARTH?
+                <p className="meteor-card-desc">
+                  Nova has detected an interstellar meteor breaching outer orbital defense on an immediate collision course with Earth.
+                  <br />
+                  <span className="meteor-card-subdesc">
+                    The Starways require an anchor — she needs your cosmic sight to forge the Guardian Shield and deflect the impact.
+                  </span>
+                </p>
               </div>
 
+              {/* Call to Action Question */}
+              <div className="meteor-card-question">
+                <Sparkles size={14} className="question-sparkle" />
+                <span>WILL YOU HELP NOVA PROTECT EARTH?</span>
+                <Sparkles size={14} className="question-sparkle" />
+              </div>
+
+              {/* Action Buttons */}
               <div className="meteor-button-group">
-                <button 
+                <motion.button 
+                  whileHover={{ scale: 1.04, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
                   className="meteor-btn-primary"
                   onClick={handleStartMission}
                 >
-                  [ HELP NOVA ]
-                </button>
-                <button 
+                  <ShieldCheck size={18} />
+                  <span>HELP NOVA</span>
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
                   className="meteor-btn-secondary"
                   onClick={handleWatchCinematic}
                 >
-                  [ WATCH WHAT HAPPENS ]
-                </button>
+                  <span>WATCH WHAT HAPPENS</span>
+                </motion.button>
               </div>
             </motion.div>
           </div>
