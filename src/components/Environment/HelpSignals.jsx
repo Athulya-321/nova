@@ -176,15 +176,18 @@ export default function HelpSignals() {
       console.error('Signal dispatch error:', err);
       errMessage = err.message || 'Transmission failed';
     } finally {
-      // Artificial pacing buffer: minimum 2000ms so radar animation is fully perceived
+      // Allow the 2.2s shooting star animation to complete cleanly across the Starways
       const elapsed = Date.now() - startTime;
-      if (elapsed < 2000) {
-        await new Promise(r => setTimeout(r, 2000 - elapsed));
+      if (elapsed < 2200) {
+        await new Promise(r => setTimeout(r, 2200 - elapsed));
       }
 
       setIsSending(false);
       if (isSuccess) {
         setSignalSuccess(true);
+        setTimeout(() => {
+          setSignalSuccess(false);
+        }, 5000);
       } else {
         setIsError(true);
         setStatusMessage(errMessage || 'Signal interrupted. Please try again.');
@@ -199,7 +202,7 @@ export default function HelpSignals() {
       {/* Ultra High Quality Lossless Background Image */}
       <motion.div
         animate={
-          isSending || isPopupOpen 
+          isPopupOpen 
             ? { filter: 'brightness(0.55) blur(1px)' } 
             : { filter: 'brightness(1) blur(0px)' }
         }
@@ -261,7 +264,9 @@ export default function HelpSignals() {
             <Send size={22} color={isSending ? "#7DE2FF" : "rgba(255, 255, 255, 0.9)"} />
           </motion.div>
           
-          <span style={{ fontSize: '0.9rem', fontWeight: '500', marginTop: '2px' }}>SEND YOUR SIGNAL</span>
+          <span style={{ fontSize: '0.9rem', fontWeight: '500', marginTop: '2px' }}>
+            {isSending ? 'TRANSMITTING SIGNAL...' : signalSuccess ? 'SIGNAL TRANSMITTED ✦' : 'SEND YOUR SIGNAL'}
+          </span>
           
           <ArrowRight size={22} color="rgba(255, 255, 255, 0.7)" />
         </motion.button>
@@ -527,10 +532,10 @@ export default function HelpSignals() {
         )}
       </AnimatePresence>
 
-      {/* Shooting Star Layer (Higher z-index than the button) */}
+      {/* Shooting Star Layer in Foreground (High z-index) */}
       <AnimatePresence>
         {isSending && (
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 120, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 200, pointerEvents: 'none' }}>
             
             <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
               {/* 1. The lingering path of the shooting star */}
@@ -586,201 +591,46 @@ export default function HelpSignals() {
                 borderRadius: '50%',
                 boxShadow: '0 0 20px 10px #fff, 0 0 40px 20px #7DE2FF',
                 transform: 'translate(-50%, -50%)',
-                zIndex: 121
+                zIndex: 201
               }}
             />
-
-            {/* High-Tech Beacon Radar Telemetry Overlay (from blueprint Part 3) */}
-            <div style={{
-              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-              display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-              background: 'rgba(3, 2, 12, 0.75)', backdropFilter: 'blur(8px)',
-              zIndex: 130
-            }}>
-              {/* Radar Dish with Sonar Waves & Conical Sweep */}
-              <div style={{ position: 'relative', width: '130px', height: '130px', marginBottom: '24px' }}>
-                <div className="beacon-ring" />
-                <div className="beacon-ring ring-2" />
-                <div className="beacon-ring ring-3" />
-                <div className="beacon-sweep-radar" />
-                <div style={{
-                  position: 'absolute', inset: '10px', borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(125, 226, 255, 0.25) 0%, rgba(17, 14, 38, 0.95) 75%)',
-                  border: '1.5px solid rgba(125, 226, 255, 0.5)',
-                  display: 'flex', justifyContent: 'center', alignItems: 'center',
-                  boxShadow: '0 0 30px rgba(125, 226, 255, 0.4)'
-                }}>
-                  <Sparkles size={34} color="#7de2ff" className="beacon-core-pulse" />
-                </div>
-              </div>
-
-              {/* Encrypted Telemetry Readout */}
-              <div style={{
-                background: 'rgba(10, 8, 26, 0.9)',
-                border: '1px solid rgba(125, 226, 255, 0.3)',
-                borderRadius: '16px',
-                padding: '16px 24px',
-                textAlign: 'center',
-                boxShadow: '0 0 30px rgba(125, 226, 255, 0.2)',
-                maxWidth: '380px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 10px #4ade80', display: 'inline-block' }} />
-                  <span style={{ fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: '#7de2ff', fontWeight: '700' }}>
-                    TRANSMITTING SOS BEACON
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', color: '#a78bfa', fontFamily: 'monospace', letterSpacing: '1px', marginBottom: '10px' }}>
-                  FREQ: 842.10 MHz • ENCRYPTION: STARWAY-RSA
-                </div>
-                <div style={{ width: '100%', height: '4px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <motion.div
-                    animate={{ width: ['0%', '100%'] }}
-                    transition={{ duration: 1.8, ease: "easeInOut" }}
-                    style={{ height: '100%', background: 'linear-gradient(90deg, #7de2ff, #aa3bff)' }}
-                  />
-                </div>
-                <div style={{ fontSize: '10px', color: '#64748b', marginTop: '8px' }}>
-                  Beam target: nova0hero@gmail.com
-                </div>
-              </div>
-            </div>
-
           </div>
         )}
       </AnimatePresence>
 
-      {/* Success Confirmation Card Modal (from blueprint Part 3) */}
+      {/* Floating Starway Acknowledgment Toast (Non-blocking) */}
       <AnimatePresence>
         {signalSuccess && (
-          <div style={{
-            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-            zIndex: 150, display: 'flex', justifyContent: 'center', alignItems: 'center',
-            background: 'rgba(3, 2, 10, 0.85)', backdropFilter: 'blur(16px)',
-            padding: '20px'
-          }}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.85, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                position: 'relative',
-                width: '480px',
-                maxWidth: '92vw',
-                background: 'radial-gradient(circle at 50% 0%, rgba(25, 20, 60, 0.98) 0%, rgba(10, 8, 24, 0.99) 100%)',
-                border: '1px solid rgba(125, 226, 255, 0.5)',
-                boxShadow: '0 0 50px rgba(125, 226, 255, 0.3), 0 0 100px rgba(170, 59, 255, 0.25)',
-                borderRadius: '24px',
-                padding: '36px 30px',
-                textAlign: 'center',
-                color: '#fff',
-                fontFamily: 'var(--font-primary)'
-              }}
-            >
-              {/* Success Badge */}
-              <div style={{
-                width: '64px', height: '64px', borderRadius: '50%',
-                background: 'rgba(125, 226, 255, 0.15)',
-                border: '2px solid #7de2ff',
-                display: 'flex', justifyContent: 'center', alignItems: 'center',
-                margin: '0 auto 18px',
-                boxShadow: '0 0 30px rgba(125, 226, 255, 0.6)'
-              }}>
-                <CheckCircle2 size={36} color="#7de2ff" />
-              </div>
-
-              <span style={{
-                display: 'inline-block',
-                padding: '4px 14px',
-                borderRadius: '20px',
-                fontSize: '11px',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-                background: 'rgba(125, 226, 255, 0.12)',
-                border: '1px solid rgba(125, 226, 255, 0.4)',
-                color: '#7de2ff',
-                marginBottom: '12px'
-              }}>
-                Signal Locked Across Starways
-              </span>
-
-              <h2 style={{
-                margin: '0 0 10px',
-                fontSize: '22px',
-                fontFamily: 'var(--font-display)',
-                letterSpacing: '2px',
-                color: '#fff'
-              }}>
-                TRANSMISSION SUCCESSFUL
-              </h2>
-
-              <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', margin: '0 0 20px' }}>
-                Nova has safely received your distress beacon at <strong style={{ color: '#7de2ff' }}>nova0hero@gmail.com</strong>.
-                {formData.email && (
-                  <span> A starway acknowledgment has been dispatched to <strong style={{ color: '#a78bfa' }}>{formData.email}</strong>.</span>
-                )}
-              </p>
-
-              {/* Quote box */}
-              <div style={{
-                background: 'rgba(125, 226, 255, 0.06)',
-                borderLeft: '3px solid #7de2ff',
-                padding: '12px 16px',
-                borderRadius: '0 10px 10px 0',
-                fontStyle: 'italic',
-                color: '#e0f2fe',
-                fontSize: '13px',
-                textAlign: 'left',
-                marginBottom: '22px'
-              }}>
-                "I have heard your signal from across the sky, {formData.name || 'friend'}. Hold fast down on Earth—you are never truly alone." — Nova
-              </div>
-
-              {/* Meta information */}
-              <div style={{
-                background: 'rgba(12, 10, 28, 0.7)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                padding: '12px',
-                marginBottom: '24px',
-                fontSize: '11px',
-                color: '#94a3b8',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '8px',
-                textAlign: 'left'
-              }}>
-                <div><strong>Traveler:</strong> {formData.name}, {formData.age} yrs</div>
-                <div><strong>Coordinates:</strong> {formData.location}</div>
-                <div><strong>Status:</strong> High-Priority Beacon</div>
-                <div><strong>Telemetry:</strong> 842.10 MHz Locked</div>
-              </div>
-
-              {/* Return button */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSignalSuccess(false)}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(90deg, #7de2ff 0%, #aa3bff 100%)',
-                  border: 'none',
-                  color: '#06050e',
-                  fontFamily: 'var(--font-display)',
-                  fontWeight: '700',
-                  letterSpacing: '2px',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  boxShadow: '0 0 25px rgba(125, 226, 255, 0.4)'
-                }}
-              >
-                RETURN TO STARWAYS
-              </motion.button>
-            </motion.div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -24, scale: 0.95 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            style={{
+              position: 'absolute',
+              top: '28px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 250,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: 'rgba(10, 8, 28, 0.92)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(125, 226, 255, 0.6)',
+              boxShadow: '0 0 35px rgba(125, 226, 255, 0.4), 0 0 60px rgba(170, 59, 255, 0.25)',
+              borderRadius: '30px',
+              padding: '12px 28px',
+              color: '#fff',
+              fontFamily: 'var(--font-display)',
+              letterSpacing: '1.5px',
+              fontSize: '13px',
+              pointerEvents: 'none'
+            }}
+          >
+            <CheckCircle2 size={18} color="#7de2ff" />
+            <span style={{ color: '#7de2ff', fontWeight: 600 }}>✦ SIGNAL TRANSMITTED ACROSS STARWAYS TO NOVA ✦</span>
+          </motion.div>
         )}
       </AnimatePresence>
 
