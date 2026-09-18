@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, ShieldCheck, X } from 'lucide-react';
+import { AlertTriangle, ShieldCheck } from 'lucide-react';
 import '../../styles/meteorEmergency.css';
 
 // Constellation target nodes (Guardian Shield shape)
@@ -33,17 +33,7 @@ function triggerEmergencyBeep() {
   }
 }
 
-export default function MeteorEmergency({ onEventStarted }) {
-  // Check if asteroid event was already played once
-  const [hasAlreadyPlayed, setHasAlreadyPlayed] = useState(() => {
-    try {
-      return localStorage.getItem('nova_asteroid_event_played') === 'true' ||
-             localStorage.getItem('nova_meteor_event_shown') === 'true';
-    } catch (_) {
-      return false;
-    }
-  });
-
+export default function MeteorEmergency() {
   // Event state: 'IDLE' | 'PRE_WARNING' | 'NOTIFICATION' | 'MISSION' 
   //             | 'WATCH_PROMPT' | 'WATCH_COUNTDOWN' | 'WATCH_AFTERMATH'
   //             | 'FAILURE_WARNING' | 'FINAL_WARNING' | 'METEOR_VIDEO' | 'AFTERMATH' | 'RECOGNITION'
@@ -70,63 +60,13 @@ export default function MeteorEmergency({ onEventStarted }) {
   const meteorVideoStartedRef = useRef(false);
   const videoElementRef = useRef(null);
 
-  // Dismiss emergency alert and ensure it never appears again
-  const handleDismissAlert = () => {
-    try {
-      localStorage.setItem('nova_asteroid_event_played', 'true');
-      localStorage.setItem('nova_meteor_event_shown', 'true');
-      sessionStorage.setItem('nova_asteroid_event_played', 'true');
-      sessionStorage.setItem('meteorMissionCompleted', 'true');
-    } catch (_) {}
-    setEventState('IDLE');
-    setHasAlreadyPlayed(true);
-  };
-
-  // 30-Second Trigger running on page load — STRICTLY ONCE ONLY
+  // 30-Second Trigger running on page load
   useEffect(() => {
-    try {
-      if (localStorage.getItem('nova_asteroid_event_played') === 'true' ||
-          localStorage.getItem('nova_meteor_event_shown') === 'true') {
-        setHasAlreadyPlayed(true);
-        return;
-      }
-    } catch (_) {}
-
-    // Expose reset helper to window for dev / testing convenience
-    if (typeof window !== 'undefined') {
-      window.__resetAsteroidEvent = () => {
-        try {
-          localStorage.removeItem('nova_asteroid_event_played');
-          localStorage.removeItem('nova_meteor_event_shown');
-          localStorage.removeItem('meteorMissionOutcome');
-          sessionStorage.removeItem('nova_asteroid_event_played');
-          sessionStorage.removeItem('meteorMissionCompleted');
-          sessionStorage.removeItem('nova_meteor_event_completed');
-          console.log('[Asteroid Event] Reset successful. Reloading...');
-          window.location.reload();
-        } catch (e) {
-          console.error(e);
-        }
-      };
-    }
-
     const preWarnTimer = setTimeout(() => {
-      try {
-        localStorage.setItem('nova_asteroid_event_played', 'true');
-        localStorage.setItem('nova_meteor_event_shown', 'true');
-        sessionStorage.setItem('nova_asteroid_event_played', 'true');
-      } catch (_) {}
-      if (onEventStarted) onEventStarted();
       setEventState('PRE_WARNING');
     }, 27000);
 
     const notifyTimer = setTimeout(() => {
-      try {
-        localStorage.setItem('nova_asteroid_event_played', 'true');
-        localStorage.setItem('nova_meteor_event_shown', 'true');
-        sessionStorage.setItem('nova_asteroid_event_played', 'true');
-      } catch (_) {}
-      if (onEventStarted) onEventStarted();
       setEventState('NOTIFICATION');
       document.body.classList.add('meteor-subtle-shake');
       setTimeout(() => {
@@ -139,12 +79,7 @@ export default function MeteorEmergency({ onEventStarted }) {
       clearTimeout(notifyTimer);
       document.body.classList.remove('meteor-subtle-shake');
     };
-  }, [onEventStarted]);
-
-  // If already played once, do not render any emergency UI or overlays
-  if (hasAlreadyPlayed) {
-    return null;
-  }
+  }, []);
 
   // Demonstration (3 cycles) vs Real 10-Second Challenge
   const [isDemonstrating, setIsDemonstrating] = useState(false);
@@ -430,28 +365,18 @@ export default function MeteorEmergency({ onEventStarted }) {
 
       // Return to original website smoothly
       setTimeout(() => {
-        try {
-          sessionStorage.setItem('meteorMissionCompleted', 'true');
-          sessionStorage.setItem('nova_meteor_event_completed', 'true');
-          localStorage.setItem('nova_asteroid_event_played', 'true');
-          localStorage.setItem('nova_meteor_event_shown', 'true');
-        } catch (_) {}
+        sessionStorage.setItem('meteorMissionCompleted', 'true');
+        sessionStorage.setItem('nova_meteor_event_completed', 'true');
         setEventState('IDLE');
-        setHasAlreadyPlayed(true);
       }, 7500);
     }
   };
 
   // Handle Spectator Return Button
   const handleSpectatorReturn = () => {
-    try {
-      sessionStorage.setItem('meteorMissionCompleted', 'true');
-      sessionStorage.setItem('nova_meteor_event_completed', 'true');
-      localStorage.setItem('nova_asteroid_event_played', 'true');
-      localStorage.setItem('nova_meteor_event_shown', 'true');
-    } catch (_) {}
+    sessionStorage.setItem('meteorMissionCompleted', 'true');
+    sessionStorage.setItem('nova_meteor_event_completed', 'true');
     setEventState('IDLE');
-    setHasAlreadyPlayed(true);
   };
 
   // ==========================================
@@ -497,14 +422,9 @@ export default function MeteorEmergency({ onEventStarted }) {
 
     // Return to website gracefully
     setTimeout(() => {
-      try {
-        sessionStorage.setItem('meteorMissionCompleted', 'true');
-        sessionStorage.setItem('nova_meteor_event_completed', 'true');
-        localStorage.setItem('nova_asteroid_event_played', 'true');
-        localStorage.setItem('nova_meteor_event_shown', 'true');
-      } catch (_) {}
+      sessionStorage.setItem('meteorMissionCompleted', 'true');
+      sessionStorage.setItem('nova_meteor_event_completed', 'true');
       setEventState('IDLE');
-      setHasAlreadyPlayed(true);
     }, 17500);
   };
 
@@ -690,35 +610,6 @@ export default function MeteorEmergency({ onEventStarted }) {
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="meteor-glass-card"
             >
-              {/* Dismiss button to close and ensure it never appears again */}
-              <button
-                type="button"
-                onClick={handleDismissAlert}
-                title="Dismiss Emergency"
-                aria-label="Dismiss Emergency"
-                style={{
-                  position: 'absolute',
-                  top: '14px',
-                  right: '14px',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '50%',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#94a3b8',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  zIndex: 25
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'; }}
-              >
-                <X size={16} />
-              </button>
-
               <div className="meteor-alert-tag">
                 <AlertTriangle size={16} />
                 <span>INCOMING SIGNAL</span>

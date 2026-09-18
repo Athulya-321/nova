@@ -34,14 +34,6 @@ function MainExperience() {
 
 function AppRenderer() {
   const { appMode } = useNova();
-  const [hasSeenAsteroid, setHasSeenAsteroid] = React.useState(() => {
-    try {
-      return localStorage.getItem('nova_asteroid_event_played') === 'true' ||
-             localStorage.getItem('nova_meteor_event_shown') === 'true';
-    } catch (_) {
-      return false;
-    }
-  });
 
   useEffect(() => {
     // Silently preload and GPU-decode all story slides in background
@@ -61,10 +53,8 @@ function AppRenderer() {
       {appMode === AppModes.STARWAYS && <Starways isExploreMode={true} />}
       {appMode === AppModes.HELP_SIGNALS && <HelpSignals />}
       
-      {/* Cinematic Meteor Emergency Event (Strictly once across the entire site) */}
-      {appMode !== AppModes.MEET_NOVA && !hasSeenAsteroid && (
-        <MeteorEmergency onEventStarted={() => setHasSeenAsteroid(true)} />
-      )}
+      {/* Cinematic Meteor Emergency Event (only when not reading Meet Nova storybook) */}
+      {appMode !== AppModes.MEET_NOVA && <MeteorEmergency />}
     </div>
   );
 }
