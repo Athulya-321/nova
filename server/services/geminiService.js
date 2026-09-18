@@ -133,10 +133,24 @@ export function generateHeuristicResponse(message, history, currentProfile = {})
     }
   }
 
-  // 3. Check for name patterns:
+  // 3. Check for name patterns (handles first introductions and corrections like "my name is actually sara"):
+  const nameCorrectionMatch = text.match(/\b(?:my name is actually|actually my name is|my real name is|it's actually|call me|name is actually|actually call me)\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
   const explicitNameMatch = text.match(/(?:my name is|call me|this is|i am|i'm|name\s*(?:is|=|:))\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
-  if (explicitNameMatch && !profile.name) {
-    const rawCandidate = explicitNameMatch[1].trim().split(/\s+(?:from|in|and|at|living|live)\b/i)[0].trim();
+  
+  let lastNovaQuestion = '';
+  if (history && history.length > 0) {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const item = history[i];
+      if (item.role === 'model' || item.sender === 'nova') {
+        lastNovaQuestion = (item.text || '').toLowerCase();
+        break;
+      }
+    }
+  }
+
+  const matchedNameRaw = nameCorrectionMatch ? nameCorrectionMatch[1] : (explicitNameMatch ? explicitNameMatch[1] : null);
+  if (matchedNameRaw) {
+    const rawCandidate = matchedNameRaw.trim().replace(/^(?:actually|really)\s+/i, '').split(/\s+(?:from|in|and|at|living|live)\b/i)[0].trim();
     const words = rawCandidate.split(/\s+/);
     const hasSadOrProblemWord = words.some(w => ['sad', 'stressed', 'happy', 'tired', 'lost', 'worried', 'struggling', 'anxious', 'sick', 'fine', 'good', 'okay', 'bad'].includes(w.toLowerCase()));
     if (!words.some(isGreetingWord) && !hasSadOrProblemWord && rawCandidate.toLowerCase() !== 'nova') {
@@ -144,28 +158,18 @@ export function generateHeuristicResponse(message, history, currentProfile = {})
       updates.name = formatted;
       profile.name = formatted;
     }
-  } else if (!profile.name) {
+  } else if (!profile.name || lastNovaQuestion.includes('what\'s your name') || lastNovaQuestion.includes('whats your name') || lastNovaQuestion.includes('your name') || lastNovaQuestion.includes('who are you') || lastNovaQuestion.includes('call you')) {
     const rawWords = text.trim().split(/\s+/);
     const cleanWords = rawWords.map(w => w.replace(/[^a-zA-Z]/g, '')).filter(Boolean);
-
-    let lastNovaQuestion = '';
-    if (history && history.length > 0) {
-      for (let i = history.length - 1; i >= 0; i--) {
-        const item = history[i];
-        if (item.role === 'model' || item.sender === 'nova') {
-          lastNovaQuestion = (item.text || '').toLowerCase();
-          break;
-        }
-      }
-    }
 
     if (cleanWords.length >= 1 && cleanWords.length <= 2) {
       const containsGreeting = cleanWords.some(isGreetingWord);
       const isTooShort = cleanWords[0].length < 2;
       const looksLikeEmotion = ['sad', 'happy', 'depressed', 'lonely', 'lost', 'crying', 'fine', 'tired'].includes(cleanWords[0].toLowerCase());
+      const isCasual = ['ok', 'okay', 'yes', 'no', 'fine', 'good', 'cool', 'thanks'].includes(cleanWords[0].toLowerCase());
       const askedLocation = lastNovaQuestion.includes('where on earth') || lastNovaQuestion.includes('reaching out from') || lastNovaQuestion.includes('where are you') || lastNovaQuestion.includes('blue world');
 
-      if (!containsGreeting && !isTooShort && !looksLikeEmotion && !emailMatch && !askedLocation) {
+      if (!containsGreeting && !isTooShort && !looksLikeEmotion && !isCasual && !emailMatch && !askedLocation) {
         const formatted = cleanWords.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         updates.name = formatted;
         profile.name = formatted;
@@ -243,6 +247,14 @@ export function generateHeuristicResponse(message, history, currentProfile = {})
     if (!isJustName && !isJustAge && !isJustLoc && !isJustGreeting && !emailMatch) {
       updates.grievance = text;
       profile.grievance = text;
+    }
+  } else if (!profile.grievance && (lastNovaQuestion.includes('troubl') || lastNovaQuestion.includes('heart') || lastNovaQuestion.includes('worr') || lastNovaQuestion.includes('star signal') || lastNovaQuestion.includes('mind') || lastNovaQuestion.includes('listening'))) {
+    if (!updates.name && !updates.location && !updates.age && !updates.email) {
+      const casualFineWords = ['ok', 'okay', 'fine', 'good', 'all good', 'nothing', 'no problem', 'no troubles', 'none', 'just visiting', 'just checking', 'just looking', 'im fine', "i'm fine", 'peaceful', 'not much', 'nothing much'];
+      if (casualFineWords.some(w => lower === w || lower.startsWith(w + ' ') || lower.endsWith(' ' + w))) {
+        updates.grievance = 'Checking in peacefully / All is well under the stars';
+        profile.grievance = updates.grievance;
+      }
     }
   }
 

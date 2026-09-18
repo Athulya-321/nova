@@ -5,6 +5,97 @@ import { useNova, ConversationPhases, NovaEmotions, NovaStates } from '../../con
 import { nanoid } from 'nanoid';
 import '../../styles/ui.css';
 
+// Comprehensive client-side parser to extract visitor details, handle corrections, and prevent conversation locks
+export function parseVisitorInput(text, currentData = {}, lastPrompt = '') {
+  const updates = {};
+  if (!text || typeof text !== 'string') return updates;
+  const trimmed = text.trim();
+  const lower = trimmed.toLowerCase();
+
+  const greetings = ['hi', 'hii', 'hiii', 'hello', 'helloo', 'hlo', 'hllo', 'hey', 'heyy', 'sup', 'yo', 'greetings', 'nova'];
+  const isGreeting = greetings.some(g => lower === g || lower.startsWith(g + ' '));
+
+  // 1. Email detection
+  const emailMatch = trimmed.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  if (emailMatch) {
+    updates.email = emailMatch[0];
+  }
+
+  // 2. Age detection (e.g. "21", "21 years old", "I am 21", "21yo", or just "29")
+  const ageExplicitMatch = trimmed.match(/(?:age\s*(?:is|=|:)?\s*|i am\s+|i'm\s+)?\b(1[0-9]|[2-9][0-9])\b(?:\s*(?:years|yrs|years old|yo))?/i);
+  const askedAge = lastPrompt.includes('journey') || lastPrompt.includes('sun') || lastPrompt.includes('cycle') || lastPrompt.includes('how old') || lastPrompt.includes('years');
+  if (ageExplicitMatch && !emailMatch) {
+    const candidateAge = trimmed.match(/\b(1[0-9]|[2-9][0-9])\b/);
+    if (candidateAge && (askedAge || trimmed.split(/\s+/).length <= 3)) {
+      updates.age = candidateAge[0];
+    }
+  }
+
+  // 3. Name detection & Name corrections (e.g. "my name is actually sara", "actually my name is sara", "call me sara", "ammu")
+  const nameCorrectionMatch = trimmed.match(/\b(?:my name is actually|actually my name is|my real name is|it's actually|call me|name is actually|actually call me|actually it's|it is actually)\s+([A-Za-z]{2,}(?:\s+[A-Za-z]{2,})?)/i);
+  const explicitNameMatch = trimmed.match(/\b(?:my name is|this is|i am|i'm|name\s*(?:is|=|:))\s+([A-Za-z]{2,}(?:\s+[A-Za-z]{2,})?)/i);
+
+  const matchedNameRaw = nameCorrectionMatch ? nameCorrectionMatch[1] : (explicitNameMatch ? explicitNameMatch[1] : null);
+  if (matchedNameRaw) {
+    let candidate = matchedNameRaw.trim().replace(/^(?:actually|really)\s+/i, '').split(/\s+(?:from|in|and|at|living|live)\b/i)[0].trim();
+    const words = candidate.split(/\s+/);
+    const hasEmotion = words.some(w => ['sad', 'happy', 'lost', 'tired', 'worried', 'fine', 'good', 'okay', 'bad'].includes(w.toLowerCase()));
+    if (!words.some(w => greetings.includes(w.toLowerCase())) && !hasEmotion && candidate.toLowerCase() !== 'nova') {
+      const formatted = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      updates.name = formatted;
+    }
+  } else if (!currentData.name || lastPrompt.includes('what\'s your name') || lastPrompt.includes('whats your name') || lastPrompt.includes('your name') || lastPrompt.includes('who are you') || lastPrompt.includes('call you')) {
+    const words = trimmed.split(/\s+/);
+    if (words.length >= 1 && words.length <= 2 && !emailMatch && !updates.age) {
+      let cleanCandidate = trimmed.replace(/[^a-zA-Z\s]/g, '').trim();
+      cleanCandidate = cleanCandidate.replace(/^(?:im|i am|i'm|call me|name is)\s+/i, '').trim();
+      const isCasual = ['ok', 'okay', 'yes', 'no', 'fine', 'good', 'cool', 'thanks', 'sure'].includes(cleanCandidate.toLowerCase());
+      if (cleanCandidate.length >= 2 && cleanCandidate.length <= 25 && !greetings.includes(cleanCandidate.toLowerCase()) && !isCasual) {
+        const formatted = cleanCandidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        updates.name = formatted;
+      }
+    }
+  }
+
+  // 4. Location detection
+  const locMatch = trimmed.match(/(?:from|in|live in|living in|location is)\s+([a-zA-Z\s,.-]+)/i);
+  const askedLocation = lastPrompt.includes('where on earth') || lastPrompt.includes('corner of') || lastPrompt.includes('blue world') || lastPrompt.includes('where are you') || lastPrompt.includes('gazing');
+  if (locMatch) {
+    const candidate = locMatch[1].trim().split(/[.,!?\n]|\s+and\s+/i)[0].trim();
+    if (candidate.length >= 2 && candidate.length <= 35 && !greetings.includes(candidate.toLowerCase())) {
+      const formatted = candidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      updates.location = formatted;
+    }
+  } else if ((!currentData.location || askedLocation) && askedLocation && !updates.age && !emailMatch && !isGreeting) {
+    const candidate = trimmed.replace(/[^a-zA-Z\s,.-]/g, '').trim();
+    if (candidate.length >= 2 && candidate.length <= 35 && trimmed.split(/\s+/).length <= 4) {
+      const formatted = candidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      updates.location = formatted;
+    }
+  }
+
+  // 5. Grievance / Problem detection
+  const askedGrievance = lastPrompt.includes('troubl') || lastPrompt.includes('heart') || lastPrompt.includes('star signal') || lastPrompt.includes('worr') || lastPrompt.includes('mind') || lastPrompt.includes('listening') || lastPrompt.includes('thoughts');
+  if (askedGrievance && !updates.name && !updates.location && !updates.age && !emailMatch) {
+    const casualFineWords = ['ok', 'okay', 'fine', 'good', 'all good', 'nothing', 'no problem', 'no troubles', 'none', 'just visiting', 'just checking', 'just looking', 'im fine', "i'm fine", 'peaceful', 'not much', 'nothing much'];
+    if (casualFineWords.some(w => lower === w || lower.startsWith(w + ' ') || lower.endsWith(' ' + w))) {
+      updates.grievance = 'Checking in peacefully / All is well under the stars';
+      updates.problem = updates.grievance;
+    } else if (!greetings.includes(lower)) {
+      updates.grievance = trimmed;
+      updates.problem = trimmed;
+    }
+  } else {
+    const troubleWords = ['stress', 'sad', 'depressed', 'anxious', 'worried', 'struggle', 'struggling', 'exam', 'family', 'crying', 'lost', 'lonely', 'scared', 'hurt', 'fail', 'failing', 'problem', 'help'];
+    if (troubleWords.some(w => lower.includes(w)) && !emailMatch && trimmed.split(/\s+/).length > 2) {
+      updates.grievance = trimmed;
+      updates.problem = trimmed;
+    }
+  }
+
+  return updates;
+}
+
 export default function ConversationUI() {
   const { 
     conversationPhase, advanceConversation, 
@@ -89,6 +180,23 @@ export default function ConversationUI() {
     addUserMessage(val);
     setInputValue('');
 
+    // Determine last Nova prompt for context
+    let lastNovaPrompt = '';
+    for (let i = chatHistory.length - 1; i >= 0; i--) {
+      if (chatHistory[i].sender === 'nova') {
+        lastNovaPrompt = (chatHistory[i].text || '').toLowerCase();
+        break;
+      }
+    }
+
+    // Immediate client extraction pass to update profile and star name instantly
+    const clientUpdates = parseVisitorInput(val, visitorData, lastNovaPrompt);
+    let activeProfile = { ...visitorData };
+    if (Object.keys(clientUpdates).length > 0) {
+      activeProfile = { ...activeProfile, ...clientUpdates };
+      setVisitorData(activeProfile);
+    }
+
     setIsTyping(true);
     
     try {
@@ -100,7 +208,7 @@ export default function ConversationUI() {
           body: JSON.stringify({
             conversationId,
             message: val,
-            visitorProfile: visitorData,
+            visitorProfile: activeProfile,
             conversationHistory: chatHistory.map(msg => ({
               role: msg.sender === 'nova' ? 'model' : 'user',
               text: msg.text
@@ -123,7 +231,7 @@ export default function ConversationUI() {
             body: JSON.stringify({
               conversationId,
               message: val,
-              visitorProfile: visitorData,
+              visitorProfile: activeProfile,
               conversationHistory: chatHistory.map(msg => ({
                 role: msg.sender === 'nova' ? 'model' : 'user',
                 text: msg.text
@@ -159,13 +267,13 @@ export default function ConversationUI() {
                   role: 'system',
                   content: `You are Nova, The Starbound Guardian. You are a warm, glowing cosmic fox friend and celestial guardian watching over Earth from the high Starways. Your voice is warm, soothing, intimate, and poetic yet simple. Speak in 2 to 3 natural sentences.
 Dynamic Visitor Context:
-- Name: ${visitorData.name || 'Not yet known'}
-- Grievance: ${visitorData.grievance || visitorData.problem || 'Not yet known'}
-- Location: ${visitorData.location || 'Not yet known'}
-- Age: ${visitorData.age || 'Not yet known'}
-- Email: ${visitorData.email || 'Not yet known'}
+- Name: ${activeProfile.name || 'Not yet known'}
+- Grievance: ${activeProfile.grievance || activeProfile.problem || 'Not yet known'}
+- Location: ${activeProfile.location || 'Not yet known'}
+- Age: ${activeProfile.age || 'Not yet known'}
+- Email: ${activeProfile.email || 'Not yet known'}
 
-Rule: In a friendly, natural cosmic way, collect any missing details in order: Name -> Grievance -> Location -> Age -> Email. Comfort any pain first. Never ask for details already known.`
+Rule: In a friendly, natural cosmic way, collect any missing details in order: Name -> Grievance -> Location -> Age -> Email. Comfort any pain first. Never ask for details already known. If the visitor corrected their name, address them by their new name warmly.`
                 },
                 ...chatHistory.slice(-6).map(msg => ({
                   role: msg.sender === 'nova' ? 'assistant' : 'user',
@@ -181,7 +289,7 @@ Rule: In a friendly, natural cosmic way, collect any missing details in order: N
             const reply = orData.choices?.[0]?.message?.content?.trim() || "I hear your star whisper across the night sky, traveler. I'm right here with you.";
             data = {
               reply,
-              profileUpdates: {},
+              profileUpdates: clientUpdates,
               emotionalState: 'welcoming',
               visitorMood: 'neutral',
               conversationIntent: 'general'
@@ -248,103 +356,12 @@ Rule: In a friendly, natural cosmic way, collect any missing details in order: N
       console.warn('Backend chat unreachable, switching to intelligent client guardian conversation:', err);
       setIsTyping(false);
 
-      const text = val.trim();
-      const lower = text.toLowerCase();
-      const updates = {};
-
-      const greetings = ['hi', 'hii', 'hiii', 'hello', 'helloo', 'hlo', 'hllo', 'hey', 'heyy', 'sup', 'yo', 'greetings', 'nova'];
-      const isGreeting = greetings.some(g => lower === g || lower.startsWith(g + ' '));
-
-      // Get Nova's last prompt to understand context
-      let lastNovaPrompt = '';
-      for (let i = chatHistory.length - 1; i >= 0; i--) {
-        if (chatHistory[i].sender === 'nova') {
-          lastNovaPrompt = (chatHistory[i].text || '').toLowerCase();
-          break;
-        }
-      }
-
-      // 1. Email detection
-      const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-      if (emailMatch) {
-        updates.email = emailMatch[0];
-        updateVisitorData('email', emailMatch[0]);
-      }
-
-      // 2. Age detection (e.g. "21", "21 years old", "I am 21", "21yo", or just "34")
-      const ageExplicitMatch = text.match(/(?:age\s*(?:is|=|:)?\s*|i am\s+|i'm\s+)?\b(1[0-9]|[2-9][0-9])\b(?:\s*(?:years|yrs|years old|yo))?/i);
-      const askedAge = lastNovaPrompt.includes('journey') || lastNovaPrompt.includes('sun') || lastNovaPrompt.includes('cycle') || lastNovaPrompt.includes('how old');
-      if (ageExplicitMatch && !emailMatch) {
-        const candidateAge = text.match(/\b(1[0-9]|[2-9][0-9])\b/);
-        if (candidateAge && (askedAge || text.split(/\s+/).length <= 3)) {
-          updates.age = candidateAge[0];
-          updateVisitorData('age', candidateAge[0]);
-        }
-      }
-
-      // 3. Name detection
-      if (!visitorData.name) {
-        const nameMatch = text.match(/(?:my name is|call me|i am|i'm|this is|name\s*(?:is|=|:))\s+([a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})?)/i);
-        if (nameMatch) {
-          const candidate = nameMatch[1].trim().split(/\s+(?:from|in|and|at)\b/i)[0].trim();
-          const lowerCandidate = candidate.toLowerCase();
-          if (!greetings.includes(lowerCandidate) && !['sad', 'lost', 'depressed', 'fine', 'good', 'okay', 'bad'].includes(lowerCandidate)) {
-            const formatted = candidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-            updates.name = formatted;
-            updateVisitorData('name', formatted);
-          }
-        } else if (!isGreeting && text.split(/\s+/).length <= 2 && !emailMatch && !updates.age) {
-          let cleanCandidate = text.replace(/[^a-zA-Z\s]/g, '').trim();
-          cleanCandidate = cleanCandidate.replace(/^(?:im|i am|i'm|call me|name is)\s+/i, '').trim();
-          if (cleanCandidate.length >= 2 && cleanCandidate.length <= 25 && !greetings.includes(cleanCandidate.toLowerCase())) {
-            const formatted = cleanCandidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-            updates.name = formatted;
-            updateVisitorData('name', formatted);
-          }
-        }
-      }
-
-      // 4. Location detection
-      const locMatch = text.match(/(?:from|in|live in|living in|location is)\s+([a-zA-Z\s,.-]+)/i);
-      const askedLocation = lastNovaPrompt.includes('where on earth') || lastNovaPrompt.includes('corner of') || lastNovaPrompt.includes('blue world') || lastNovaPrompt.includes('where are you') || lastNovaPrompt.includes('gazing');
-      if (locMatch) {
-        const candidate = locMatch[1].trim().split(/[.,!?\n]|\s+and\s+/i)[0].trim();
-        if (candidate.length >= 2 && candidate.length <= 35 && !greetings.includes(candidate.toLowerCase())) {
-          const formatted = candidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-          updates.location = formatted;
-          updateVisitorData('location', formatted);
-        }
-      } else if (!visitorData.location && askedLocation && !updates.age && !emailMatch && !isGreeting) {
-        const candidate = text.replace(/[^a-zA-Z\s,.-]/g, '').trim();
-        if (candidate.length >= 2 && candidate.length <= 35 && text.split(/\s+/).length <= 4) {
-          const formatted = candidate.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-          updates.location = formatted;
-          updateVisitorData('location', formatted);
-        }
-      }
-
-      // 5. Grievance / Problem detection
-      const askedGrievance = lastNovaPrompt.includes('troubl') || lastNovaPrompt.includes('heart') || lastNovaPrompt.includes('star signal') || lastNovaPrompt.includes('worr');
-      if (!visitorData.grievance && !visitorData.problem) {
-        if (askedGrievance && !isGreeting && !updates.name && !updates.location && !updates.age && !emailMatch) {
-          updates.grievance = text;
-          updateVisitorData('grievance', text);
-          updateVisitorData('problem', text);
-        } else {
-          const troubleWords = ['stress', 'sad', 'depressed', 'anxious', 'worried', 'struggle', 'struggling', 'exam', 'family', 'crying', 'lost', 'lonely', 'scared', 'hurt', 'fail', 'failing', 'problem', 'help'];
-          if (troubleWords.some(w => lower.includes(w)) && !emailMatch && text.split(/\s+/).length > 2) {
-            updates.grievance = text;
-            updateVisitorData('grievance', text);
-            updateVisitorData('problem', text);
-          }
-        }
-      }
-
-      const currentName = updates.name || visitorData.name;
-      const currentLoc = updates.location || visitorData.location;
-      const currentGrievance = updates.grievance || visitorData.grievance || visitorData.problem;
-      const currentAge = updates.age || visitorData.age;
-      const currentEmail = updates.email || visitorData.email;
+      const updates = parseVisitorInput(val, activeProfile, lastNovaPrompt);
+      const currentName = updates.name || activeProfile.name;
+      const currentLoc = updates.location || activeProfile.location;
+      const currentGrievance = updates.grievance || activeProfile.grievance || activeProfile.problem;
+      const currentAge = updates.age || activeProfile.age;
+      const currentEmail = updates.email || activeProfile.email;
 
       let reply = '';
       if (!currentName) {
@@ -352,7 +369,7 @@ Rule: In a friendly, natural cosmic way, collect any missing details in order: N
       } else if (!currentGrievance) {
         reply = `Tell me, ${currentName}, what thoughts, worries, or dreams have brought your star signal to me tonight? I'm right here listening with all my heart.`;
       } else if (!currentLoc) {
-        reply = updates.grievance
+        reply = updates.grievance && !updates.grievance.includes('peacefully')
           ? `Thank you for sharing that with me, ${currentName}. I can feel the weight of it across the stars, but you don't have to carry it all alone. What corner of our blue world are you gazing up at the stars from tonight?`
           : `I'm right beside you, ${currentName}. What corner of our blue world are you gazing up at the stars from tonight?`;
       } else if (!currentAge) {

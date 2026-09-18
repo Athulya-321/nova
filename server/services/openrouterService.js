@@ -72,21 +72,27 @@ export function fastRegexPass(text, profile = {}, lastNovaQuestion = '') {
     }
   }
 
-  // 3. Name pattern:
-  const nameMatch = trimmed.match(/\b(?:my name is|call me|this is|i am|i'm|name\s*(?:is|=|:))\s+([A-Za-z]{2,}(?:\s+[A-Za-z]{2,})?)/i);
-  if (nameMatch && !profile.name) {
-    let potential = nameMatch[1].trim().split(/\s+(?:from|in|and|at|living|live)\b/i)[0].trim();
+  // 3. Name pattern (handles first introductions and corrections like "my name is actually sara"):
+  const nameCorrectionMatch = trimmed.match(/\b(?:my name is actually|actually my name is|my real name is|it's actually|call me|name is actually|actually call me|actually it's|it is actually)\s+([A-Za-z]{2,}(?:\s+[A-Za-z]{2,})?)/i);
+  const explicitNameMatch = trimmed.match(/\b(?:my name is|this is|i am|i'm|name\s*(?:is|=|:))\s+([A-Za-z]{2,}(?:\s+[A-Za-z]{2,})?)/i);
+
+  const matchedNameRaw = nameCorrectionMatch ? nameCorrectionMatch[1] : (explicitNameMatch ? explicitNameMatch[1] : null);
+  if (matchedNameRaw) {
+    let potential = matchedNameRaw.trim().replace(/^(?:actually|really)\s+/i, '').split(/\s+(?:from|in|and|at|living|live)\b/i)[0].trim();
     const words = potential.split(/\s+/);
     const hasEmotion = words.some(w => ['sad', 'happy', 'lost', 'tired', 'worried', 'fine', 'good', 'okay', 'bad'].includes(w.toLowerCase()));
     if (!words.some(w => nonNameWords.has(w.toLowerCase())) && !hasEmotion && potential.toLowerCase() !== 'nova') {
       const formatted = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       extracted.name = formatted;
     }
-  } else if (!profile.name && (lastQ.includes('what name') || lastQ.includes('call you') || lastQ.includes('name do you go by') || lastQ.includes('who are you'))) {
+  } else if (!profile.name || lastQ.includes('what\'s your name') || lastQ.includes('whats your name') || lastQ.includes('your name') || lastQ.includes('what name') || lastQ.includes('call you') || lastQ.includes('who are you')) {
+    // Single word name answer (e.g. "ammu", "sara", "Alex")
     const words = trimmed.split(/\s+/);
-    if (words.length >= 1 && words.length <= 2) {
+    if (words.length >= 1 && words.length <= 2 && !extracted.age && !emailMatch) {
       const clean = words.map(w => w.replace(/[^A-Za-z]/g, '')).filter(Boolean);
-      if (clean.length > 0 && !clean.some(w => nonNameWords.has(w.toLowerCase()))) {
+      const isGreeting = clean.some(w => ['hi', 'hello', 'hey', 'yo', 'sup', 'greetings', 'nova'].includes(w.toLowerCase()));
+      const isCasualFine = clean.some(w => ['ok', 'okay', 'fine', 'good', 'cool', 'yes', 'no', 'thanks'].includes(w.toLowerCase()));
+      if (clean.length > 0 && !isGreeting && !isCasualFine && !clean.some(w => nonNameWords.has(w.toLowerCase()))) {
         const formatted = clean.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         extracted.name = formatted;
       }
@@ -114,9 +120,14 @@ export function fastRegexPass(text, profile = {}, lastNovaQuestion = '') {
   const problemMatch = trimmed.match(/(?:my problem is|my grievance is|i struggle with|i'm struggling with|i need help with|trouble with|worried about|hurts because)\s+(.+)/i);
   if (problemMatch) {
     extracted.grievance = problemMatch[1].trim();
-  } else if (!profile.grievance && (lastQ.includes('troubl') || lastQ.includes('heart') || lastQ.includes('worr') || lastQ.includes('star signal to me') || lastQ.includes('mind'))) {
-    if (!extracted.name && !extracted.location && !extracted.age && !extracted.email && !nonNameWords.has(lower)) {
-      extracted.grievance = trimmed;
+  } else if (!profile.grievance && (lastQ.includes('troubl') || lastQ.includes('heart') || lastQ.includes('worr') || lastQ.includes('star signal to me') || lastQ.includes('mind') || lastQ.includes('thoughts'))) {
+    if (!extracted.name && !extracted.location && !extracted.age && !extracted.email) {
+      const casualFineWords = ['ok', 'okay', 'fine', 'good', 'all good', 'nothing', 'no problem', 'no troubles', 'none', 'just visiting', 'just checking', 'just looking', 'im fine', "i'm fine", 'peaceful', 'not much', 'nothing much'];
+      if (casualFineWords.some(w => lower === w || lower.startsWith(w + ' ') || lower.endsWith(' ' + w))) {
+        extracted.grievance = 'Checking in peacefully / All is well under the stars';
+      } else if (!nonNameWords.has(lower)) {
+        extracted.grievance = trimmed;
+      }
     }
   }
 
@@ -304,8 +315,9 @@ EXTRACTION RULES:
 - If Nova asked about location and the user answered with a place (city, state, country, or region), extract it into 'location'.
 - If Nova asked about age/journeys around the sun and the user gave a number/age, extract it into 'age'.
 - If Nova asked about thoughts/worries/grievance and the user described what they feel or face, extract it into 'grievance'.
+- If the user responds with casual words or has no problems when asked what's on their heart (e.g. "ok", "fine", "nothing", "all good", "cool", "just visiting"), extract "Checking in peacefully / All is well" into 'grievance'.
 - If the user provides an email address, extract it into 'email'.
-- If the user shared their name, extract clean name into 'name'.
+- If the user shared their name OR corrected their name (e.g. "my name is actually sara", "call me sara", "actually sara", or single-name answer), ALWAYS extract the new clean name into 'name'.
 - Never extract conversational fillers (Hi, Hello, Ok, Fine, Nothing, Sad) as names.
 - 'visitorMood': "happy" | "sad" | "anxious" | "curious" | "neutral"
 - 'emotionalState': "welcoming" | "empathetic" | "joyful" | "protective"
@@ -366,17 +378,16 @@ Output MUST be a valid JSON object matching this schema:
       }
     }
   } catch (err) {
-    console.warn('[openrouterService] Thread 2 non-fatal entity extraction warning:', err);
+    console.warn('[openrouterService] threadEntityExtraction network err:', err.message || err);
   }
 
   return extracted;
 }
 
 /**
- * Main response orchestrator:
- * 1. Finds last Nova question from history for context.
- * 2. Runs fast-pass regex and entity extraction to update profile.
- * 3. Builds dialogue prompt with the freshly updated profile so Nova accurately asks the next missing detail.
+ * Combined high-level orchestrator:
+ * Executes fast regex parsing + entity extraction + dialogue synthesis,
+ * returning full response and synchronized profile updates.
  */
 export async function generateNovaResponse(message, history = [], currentProfile = {}) {
   const profile = { ...(currentProfile || {}) };
@@ -395,19 +406,19 @@ export async function generateNovaResponse(message, history = [], currentProfile
 
   // 1. Fast regex pre-pass
   const immediateUpdates = fastRegexPass(message, profile, lastNovaQuestion);
-  if (immediateUpdates.name && (!profile.name || profile.name === 'Traveler')) {
+  if (immediateUpdates.name) {
     profile.name = immediateUpdates.name;
   }
-  if (immediateUpdates.age && !profile.age) {
+  if (immediateUpdates.age) {
     profile.age = immediateUpdates.age;
   }
-  if (immediateUpdates.location && !profile.location) {
+  if (immediateUpdates.location) {
     profile.location = immediateUpdates.location;
   }
-  if (immediateUpdates.email && !profile.email) {
+  if (immediateUpdates.email) {
     profile.email = immediateUpdates.email;
   }
-  if (immediateUpdates.grievance && !profile.grievance) {
+  if (immediateUpdates.grievance) {
     profile.grievance = immediateUpdates.grievance;
     profile.problem = immediateUpdates.grievance;
   }
@@ -419,21 +430,21 @@ export async function generateNovaResponse(message, history = [], currentProfile
       return {};
     });
 
-    if (extractionResult.name && (!profile.name || profile.name === 'Traveler')) {
+    if (extractionResult.name && extractionResult.name !== 'Traveler' && !nonNameWords.has(extractionResult.name.toLowerCase())) {
       profile.name = extractionResult.name;
     }
-    if (extractionResult.age && !profile.age) {
-      profile.age = extractionResult.age;
+    if (extractionResult.age && String(extractionResult.age).trim() !== 'null') {
+      profile.age = String(extractionResult.age).trim();
     }
-    if (extractionResult.location && !profile.location) {
+    if (extractionResult.location && String(extractionResult.location).trim() !== 'null') {
       profile.location = extractionResult.location;
     }
-    if (extractionResult.email && !profile.email) {
+    if (extractionResult.email && String(extractionResult.email).trim() !== 'null') {
       profile.email = extractionResult.email;
     }
-    if (extractionResult.grievance && !profile.grievance) {
-      profile.grievance = extractionResult.grievance;
-      profile.problem = extractionResult.grievance;
+    if (extractionResult.grievance && String(extractionResult.grievance).trim() !== 'null') {
+      profile.grievance = String(extractionResult.grievance).trim();
+      profile.problem = String(extractionResult.grievance).trim();
     }
 
     // 3. Generate Nova's dialogue with the updated profile
